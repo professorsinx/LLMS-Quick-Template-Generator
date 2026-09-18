@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLMS Recommendation Generator</title>
+<style>
+  :root{
+    --ink:#152238; --ink-soft:#4A5568; --ink-faint:#8891A3;
+    --paper:#FAFAF8; --shell:#E9ECEF; --shell-deep:#DDE1E6;
+    --rule:#CBD2DA; --rule-strong:#9AA5B3; --accent:#8A5A19; --accent-deep:#6B4412; --accent-soft:#F1E4CC;
+    --danger:#B3202B; --danger-bg:#FDEDEC;
+    --ok:#2C7A52; --ok-bg:#E9F5EF;
+    --serif:'Iowan Old Style','Palatino Linotype',Georgia,'Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0; background:var(--shell); color:var(--ink); font-family:var(--sans); padding-bottom:60px;}
+  header.app-head{background:var(--ink); color:#EDE6D6; padding:22px 28px 18px; border-bottom:3px solid var(--accent);}
+  .head-row{display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap;}
+  .head-titles h1{font-family:var(--serif); font-size:22px; margin:0;}
+  .head-titles p{margin:2px 0 0; font-size:12.5px; color:#C9C2AC;}
+  .head-steps{display:flex; gap:6px; font-size:11.5px;}
+  .step-pill{padding:6px 12px; border:1px solid #4A5A7A; border-radius:99px; color:#B9C2D6; cursor:pointer; background:transparent;}
+  .step-pill.active{border-color:var(--accent); color:#FBF3E0; background:#26314A;}
+
+  main{max-width:1080px; margin:26px auto 0; padding:0 24px;}
+  .panel{display:none;} .panel.active{display:block;}
+  .card{background:var(--paper); border:1px solid var(--rule); border-radius:6px; margin-bottom:18px;}
+  .card-head{padding:16px 22px; border-bottom:1px solid var(--rule);}
+  .card-head h2{margin:0; font-family:var(--serif); font-size:18px;}
+  .card-head p.hint{margin:4px 0 0; font-size:12.5px; color:var(--ink-soft); font-family:var(--sans); font-weight:400;}
+  .card-body{padding:20px 22px;}
+
+  .code-wrap{position:relative; margin-top:14px;}
+  pre.code{background:#101B30; color:#D9E2F1; border-radius:6px; padding:18px; font-family:var(--mono); font-size:12.3px; overflow:auto; max-height:320px;}
+  .copy-btn{position:absolute; top:10px; right:10px; background:var(--accent); color:#1B1000; border:none; border-radius:5px; padding:7px 14px; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:6px;}
+  .copy-btn:hover{background:#A06B1E;}
+
+  .btn{font-family:var(--sans); font-size:13px; font-weight:600; border-radius:5px; padding:9px 16px; cursor:pointer; border:1px solid var(--rule-strong); background:#fff; transition:.12s;}
+  .btn:hover{border-color:var(--ink-soft);}
+  .btn-primary{background:var(--ink); color:#F3EEDF; border-color:var(--ink);}
+  .btn-primary:hover{background:#233052;}
+  .btn-danger{color:var(--danger); border-color:var(--danger);}
+
+  #pasteArea{width:100%; height:110px; border:1px solid var(--rule-strong); border-radius:6px; padding:12px; font-family:var(--mono); font-size:12.5px; margin-bottom:12px;}
+
+  /* --- form grid --- */
+  .field-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:14px 18px;}
+  .field{display:flex; flex-direction:column; gap:4px;}
+  .field label{font-size:12px; font-weight:600; color:var(--ink-soft);}
+  .field input, .field select, .field textarea{
+    border:1px solid var(--rule-strong); border-radius:5px; padding:8px 10px; font-family:var(--sans); font-size:13.5px; background:#fff; color:var(--ink);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--accent);}
+  .field.auto input{background:#FFFBEF; border-color:var(--accent-soft);}
+  .field textarea{resize:vertical; min-height:70px; font-family:var(--sans);}
+  .field.wide{grid-column:1 / -1;}
+  .autofill-tag{font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--ok); font-weight:700;}
+
+  .toolbar{display:flex; justify-content:space-between; background:#fff; border:1px solid var(--rule); border-radius:6px; padding:12px 16px; margin-bottom:16px; align-items:center; flex-wrap:wrap; gap:10px;}
+  #docSheet{background:#fff; border:1px solid var(--rule); border-radius:4px; padding:40px 46px; box-shadow:0 10px 30px rgba(0,0,0,.1); font-family:var(--serif); font-size:14.5px; line-height:1.7; color:var(--ink);}
+  #docSheet p{margin:0 0 14px;}
+  .doc-title{text-align:center; font-weight:700; font-size:18px; text-decoration:underline; text-underline-offset:4px; margin-bottom:4px;}
+  .doc-sub{display:flex; justify-content:space-between; font-family:var(--sans); font-size:12.5px; color:var(--ink-soft); margin-bottom:22px; border-bottom:1px solid var(--rule); padding-bottom:10px;}
+  .doc-sub .cell-value{display:inline-block; min-width:90px;}
+
+  #writeupDoc{outline:none;}
+  #writeupDoc.editing{background:#FFFDF6; box-shadow:inset 0 0 0 2px var(--accent-soft); border-radius:4px; padding:14px; margin:-14px;}
+  .blank{color:var(--ink-faint); font-style:italic; background:#FDEDEC; padding:0 3px; border-radius:2px;}
+
+  .toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:11px 20px; border-radius:6px; opacity:0; pointer-events:none; transition:.2s; z-index:9999;}
+  .toast.show{opacity:1;}
+
+  .godbar{display:flex; align-items:center; gap:15px;}
+  .godlabel{cursor:pointer; background:var(--danger-bg); color:var(--danger); padding:5px 10px; border-radius:4px; border:1px solid var(--danger); font-size:12px; font-weight:bold; display:flex; align-items:center; gap:6px;}
+
+  @media print{
+    @page{ size:A4 portrait; margin:14mm; }
+    body{background:#fff; padding:0;}
+    header, .toolbar, .no-print, .toast{display:none !important;}
+    #docSheet{border:none; box-shadow:none; padding:0;}
+    .blank{background:none; color:var(--ink);}
+  }
+</style>
+</head>
+<body>
+
+<header class="app-head no-print">
+  <div class="head-row">
+    <div class="head-titles">
+      <h1>LLMS Recommendation Generator</h1>
+      <p>Term Loan / Subsidy Scheme — Credit Recommendation Write-up</p>
+    </div>
+    <div class="head-steps">
+      <button class="step-pill active" data-step="1">1 Extract</button>
+      <button class="step-pill" data-step="2">2 Fill Variables</button>
+      <button class="step-pill" data-step="3">3 Recommendation</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- STEP 1: EXTRACT -->
+  <section class="panel active" id="panel-1">
+    <div class="card">
+      <div class="card-head"><h2>Step 1: Copy script &amp; run in CBS Console</h2>
+        <p class="hint">This script reads the visible fields on your CBS screen and copies them to your clipboard as plain text — nothing is sent anywhere.</p>
+      </div>
+      <div class="card-body">
+        <ol style="margin-top:0;">
+          <li>Open your CBS screen (e.g. Account Details).</li>
+          <li>Press <b>F12</b> to open the Console.</li>
+          <li>Paste the script below and hit Enter — the data copies to your clipboard automatically.</li>
+          <li>Go to <b>Step 2</b> and paste it in.</li>
+        </ol>
+        <div class="code-wrap">
+          <button class="copy-btn" id="copyScriptBtn">📋 Copy script</button>
+          <pre class="code" id="scriptBlock"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2: VARIABLES -->
+  <section class="panel" id="panel-2">
+    <div class="card">
+      <div class="card-head"><h2>Paste CBS Data</h2></div>
+      <div class="card-body">
+        <textarea id="pasteArea" placeholder="Paste the clipboard data here..."></textarea>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-primary" id="processBtn">Auto-fill from pasted data</button>
+          <button class="btn btn-danger" id="clearBtn">Clear all fields</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Applicant &amp; Firm</h2></div>
+      <div class="card-body field-grid" id="grp-applicant"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Identity Documents</h2></div>
+      <div class="card-body field-grid" id="grp-ids"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Residence &amp; Banking Relationship</h2></div>
+      <div class="card-body field-grid" id="grp-residence"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Credit &amp; Background</h2></div>
+      <div class="card-body field-grid" id="grp-credit"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Subsidy Scheme</h2></div>
+      <div class="card-body field-grid" id="grp-subsidy"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Quotation &amp; Project Cost</h2></div>
+      <div class="card-body field-grid" id="grp-quotation"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Funding Pattern</h2></div>
+      <div class="card-body field-grid" id="grp-funding"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Business Narrative</h2>
+        <p class="hint">A closing paragraph on the applicant's specific business. Starts with a sample — rewrite it for each case.</p>
+      </div>
+      <div class="card-body field-grid" id="grp-narrative"></div>
+    </div>
+
+    <div class="btn-row" style="margin:6px 0 30px;">
+      <button class="btn btn-primary" id="generateBtn">Generate Write-up →</button>
+    </div>
+  </section>
+
+  <!-- STEP 3: RECOMMENDATION -->
+  <section class="panel" id="panel-3">
+    <div class="toolbar no-print">
+      <div class="godbar">
+        <div style="font-size:13px; font-weight:bold;">Generated Recommendation</div>
+        <label class="godlabel">
+          <input type="checkbox" id="godModeToggle" style="vertical-align:middle;"> ⚡ God Mode (Edit Anything)
+        </label>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <button class="btn" id="regenBtn">↺ Regenerate from Variables</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨 Print / Save PDF</button>
+        <button class="btn" id="copyTextBtn">📋 Copy Text</button>
+        <button class="btn" id="exportJsonBtn">⭳ Export JSON</button>
+        <button class="btn" id="importJsonBtn">⭱ Import JSON</button>
+        <input type="file" id="importJsonFile" accept="application/json,.json" style="display:none;">
+        <button class="btn" onclick="goToStep(2)">← Back</button>
+      </div>
+    </div>
+
+    <div id="docSheet">
+      <div class="doc-title">RECOMMENDATION NOTE</div>
+      <div class="doc-sub">
+        <span>Credit Proposal — Term Loan / Subsidy Scheme</span>
+        <span>Date: <span class="cell-value editable" data-key="docDate" contenteditable="true" onblur="updateSimple(this)" style="font-family:var(--mono);"></span></span>
+      </div>
+      <div id="writeupDoc"></div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// --- SCRIPT TO COPY (identical to the other Composer tools) ---
+const EXTRACT_SCRIPT = `(function(){
+  try {
+    var data = {};
+    document.querySelectorAll('label[for]').forEach(function(lab){
+      var forId = lab.getAttribute('for');
+      var el = document.getElementById(forId);
+      if(!el) return;
+      var tag = el.tagName.toLowerCase();
+      if(['input','select','textarea'].indexOf(tag) === -1) return;
+      if(['hidden','checkbox','radio','button','submit'].indexOf(el.type) !== -1) return;
+      var labelText = (lab.textContent || '').replace(/\\u00a0/g,' ').replace(/:\\s*$/,'').trim();
+      var value = (tag === 'select') ? (el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : el.value) : el.value;
+      value = (value || '').trim();
+      if(labelText && value) data[labelText] = value;
+    });
+    var txt = "Screen\\t" + (document.title || 'CBS_Screen') + "\\n";
+    for(var key in data) txt += key + "\\t" + data[key] + "\\n";
+    var dummy = document.createElement('textarea');
+    document.body.appendChild(dummy);
+    dummy.value = txt;
+    dummy.select();
+    document.execCommand('copy');
+    document.body.removeChild(dummy);
+    alert('Data copied to clipboard! Paste it into the Composer App.');
+  } catch(e) { alert('Extraction failed: ' + e.message); }
+})();`;
+
+document.getElementById('scriptBlock').textContent = EXTRACT_SCRIPT;
+document.getElementById('copyScriptBtn').addEventListener('click', function(){
+  navigator.clipboard.writeText(EXTRACT_SCRIPT).then(()=>{
+    this.textContent = 'Copied ✓';
+    setTimeout(()=> this.textContent='📋 Copy script', 1800);
+  });
+});
+
+// --- FIELD DEFINITIONS ---
+// type: text | select | textarea
+const FIELD_GROUPS = {
+  'grp-applicant': [
+    {key:'applicantName', label:'Applicant Name', type:'text'},
+    {key:'firmName', label:'Firm Name', type:'text'},
+    {key:'businessCommencementDate', label:'Date of Commencement of Business', type:'text', placeholder:'DD/MM/YYYY'},
+    {key:'udyamRegNo', label:'Udyam Registration No', type:'text'}
+  ],
+  'grp-ids': [
+    {key:'aadhaarNo', label:'Aadhaar No', type:'text'},
+    {key:'voterId', label:'Voter ID', type:'text'},
+    {key:'pan', label:'PAN', type:'text'},
+    {key:'drivingLicence', label:'Driving Licence No', type:'text'},
+    {key:'dlBadgeNumber', label:'DL Badge No.', type:'text'},
+    {key:'dlValidityDate', label:'DL Valid Upto', type:'text', placeholder:'DD/MM/YYYY'}
+  ],
+  'grp-residence': [
+    {key:'residentialAddress', label:'Residential Address', type:'textarea', auto:true},
+    {key:'accountSinceYear', label:'SB Account Maintained Since (Year)', type:'text', auto:true}
+  ],
+  'grp-credit': [
+    {key:'cibilControlNo', label:'CIBIL Control No', type:'text'},
+    {key:'workSector', label:'Sector of Work/Experience', type:'text', placeholder:'e.g. transport & tourism'},
+    {key:'experienceYears', label:'Years of Experience', type:'text'}
+  ],
+  'grp-subsidy': [
+    {key:'govtLevel', label:'Sanctioning Authority', type:'select', options:['Govt. of Tamil Nadu','Government of India']},
+    {key:'schemeName', label:'Scheme Name', type:'select', options:['CM-ARISE','AABCS','PMEGP','TWEES','UYEGP']},
+    {key:'subsidyAmount', label:'Subsidy Amount (Rs.)', type:'text'},
+    {key:'purchaseItem', label:'Purchase Item / Purpose', type:'text'}
+  ],
+  'grp-quotation': [
+    {key:'supplierName', label:"Supplier's Name", type:'text'},
+    {key:'supplierGST', label:'Supplier GST', type:'text'},
+    {key:'firstQuotationDate', label:'First Quotation Date', type:'text', placeholder:'DD/MM/YYYY'},
+    {key:'firstProjectCost', label:'First Project Cost (Rs.)', type:'text'},
+    {key:'sanctionLetterRef', label:'Sanction Letter Reference', type:'text'},
+    {key:'latestQuotationDate', label:'Latest Quotation Date', type:'text', placeholder:'DD/MM/YYYY'},
+    {key:'latestProjectCost', label:'Latest Project Cost (Rs.)', type:'text'}
+  ],
+  'grp-funding': [
+    {key:'loanAmount', label:'Term Loan Amount (Rs.)', type:'text'},
+    {key:'ownContribution', label:"Borrower's Own Contribution (Rs.)", type:'text'}
+  ],
+  'grp-narrative': [
+    {key:'businessNarrative', label:'Business Narrative Paragraph', type:'textarea', wide:true}
+  ]
+};
+
+const DEFAULT_NARRATIVE = "Over the years {{ApplicantName}} operating as a Sole Proprietor in the Tiruchirappalli District, Tamil Nadu, has demonstrated a firm grasp of the regional transport and tourism micro-economy. The applicant possesses valid driving license and leverages established client tie-ups within the localized pilgrimage circuit and inter-district hotel networks. The chosen business model - shuttling hotel guests and facilitating temple tourism routes capitalizes on the year-round steady footfall in central Tamil Nadu, providing a stable revenue stream.";
+
+function todayStr(){ const d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear(); }
+
+function defaultState(){
+  const s = { docDate: todayStr(), finalHtml: '' };
+  Object.values(FIELD_GROUPS).flat().forEach(f => s[f.key] = '');
+  s.businessNarrative = DEFAULT_NARRATIVE;
+  return s;
+}
+let state = defaultState();
+
+// --- BUILD THE FORM ---
+function renderForm(){
+  Object.entries(FIELD_GROUPS).forEach(([groupId, fields]) => {
+    const container = document.getElementById(groupId);
+    container.innerHTML = fields.map(f => {
+      const wideClass = f.wide ? ' wide' : '';
+      const autoClass = f.auto ? ' auto' : '';
+      const autoTag = f.auto ? ' <span class="autofill-tag">auto-fill</span>' : '';
+      let inputHtml = '';
+      if(f.type === 'select'){
+        inputHtml = `<select data-key="${f.key}" onchange="updateSimple(this)">
+          <option value="">— select —</option>
+          ${f.options.map(o => `<option value="${escapeAttr(o)}" ${state[f.key]===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}
+        </select>`;
+      } else if(f.type === 'textarea'){
+        inputHtml = `<textarea data-key="${f.key}" oninput="updateSimple(this)" placeholder="${f.placeholder||''}">${escapeHtml(state[f.key])}</textarea>`;
+      } else {
+        inputHtml = `<input type="text" data-key="${f.key}" value="${escapeAttr(state[f.key])}" placeholder="${f.placeholder||''}" oninput="updateSimple(this)">`;
+      }
+      return `<div class="field${wideClass}${autoClass}"><label>${f.label}${autoTag}</label>${inputHtml}</div>`;
+    }).join('');
+  });
+}
+function escapeHtml(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
+
+function updateSimple(el){
+  const key = el.dataset.key;
+  if(!key) return;
+  state[key] = (el.value !== undefined ? el.value : el.innerText);
+}
+
+// --- PASTE PROCESSING ---
+function norm(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(); }
+
+document.getElementById('processBtn').addEventListener('click', () => {
+  const text = document.getElementById('pasteArea').value;
+  if(!text.trim()) return showToast('Please paste data first');
+
+  const fields = {};
+  text.split('\n').forEach(l => {
+    let match = l.match(/^(.*?)(?:\t| {2,}|[\u2002\u2003\u00a0]+)(.*)$/);
+    if(match){ fields[norm(match[1])] = match[2].trim(); }
+    else { let parts = l.split('\t'); if(parts.length >= 2) fields[norm(parts[0])] = parts.slice(1).join(' ').trim(); }
+  });
+  const g = (keys) => { for(let k of keys) if(fields[norm(k)]) return fields[norm(k)]; return ''; };
+
+  state.applicantName = g(['Name','Customer Name','Account Name']) || state.applicantName;
+
+  let door = g(['Door/ Flat No./ Building/ Society']);
+  let street = g(['Street / Road Name / Block']);
+  let locality = g(['Locality / Village / Tehsil']);
+  let distRaw = g(['District']);
+  let dist = distRaw ? distRaw.replace(/^\d+:/, '').trim() : '';
+  let pc = g(['Post Code']);
+  let addrParts = [door, street, locality, dist, pc].filter(Boolean).join(', ');
+  if(addrParts) state.residentialAddress = addrParts;
+
+  let ccd = g(['Customer Creation Date']);
+  if(ccd){
+    let yearMatch = ccd.match(/(\d{4})/);
+    if(yearMatch) state.accountSinceYear = yearMatch[1];
+  }
+
+  renderForm();
+  showToast('✔ Auto-filled what we found. Fill in the rest below.');
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  document.getElementById('pasteArea').value = '';
+  state = defaultState();
+  renderForm();
+  showToast('Cleared.');
+});
+
+// --- WRITE-UP GENERATION ---
+function blankOr(val, placeholderText){
+  const v = (val || '').trim();
+  return v ? escapeHtml(v) : `<span class="blank">[ ${placeholderText} ]</span>`;
+}
+
+function generateWriteup(){
+  const s = state;
+  const name = blankOr(s.applicantName, 'Applicant Name');
+
+  const narrativeText = (s.businessNarrative || DEFAULT_NARRATIVE).replace(/\{\{ApplicantName\}\}/g, s.applicantName || 'the applicant');
+
+  const html = `
+    <p>${name} is the proprietor of ${blankOr(s.firmName,'Firm Name')} - date of commencement of business - ${blankOr(s.businessCommencementDate,'commencement date')} with Udyam Registration No ${blankOr(s.udyamRegNo,'Udyam Reg. No')}</p>
+
+    <p>Aadhaar No: ${blankOr(s.aadhaarNo,'Aadhaar No')}<br>
+    Voter ID: ${blankOr(s.voterId,'Voter ID')}<br>
+    PAN: ${blankOr(s.pan,'PAN')}<br>
+    Driving Licence: ${blankOr(s.drivingLicence,'DL No')} with badge No. ${blankOr(s.dlBadgeNumber,'badge No')} which is valid upto ${blankOr(s.dlValidityDate,'validity date')}</p>
+
+    <p>He residing at ${blankOr(s.residentialAddress,'residential address')} has been maintaining his SB account with us since ${blankOr(s.accountSinceYear,'year')}.</p>
+
+    <p>Individual CIBIL (Control No. ${blankOr(s.cibilControlNo,'Control No')}) was verified and credit history was found to be satisfactory with no overdues. The applicant has been working in the ${blankOr(s.workSector,'sector')} sector for the last ${blankOr(s.experienceYears,'experience')} years</p>
+
+    <p>${name} has been sanctioned capital subsidy under ${blankOr(s.govtLevel,"Govt. of Tamil Nadu / Government of India")}'s ${blankOr(s.schemeName,'Scheme Name')} scheme of Rs. ${blankOr(s.subsidyAmount,'subsidy amount')}/- for purchase of ${blankOr(s.purchaseItem,'purchase item')}.</p>
+
+    <p>Note: The original quotation (issued by supplier ${blankOr(s.supplierName,"Supplier's Name")}, GST ${blankOr(s.supplierGST,'Supplier GST')} - cross verified from GST portal) dt. ${blankOr(s.firstQuotationDate,'first quotation date')} submitted by the borrower had an estimate of Rs. ${blankOr(s.firstProjectCost,'first project cost')}/- which was taken as the project cost for the ${blankOr(s.schemeName,'Scheme Name')} approval (vide letter ${blankOr(s.sanctionLetterRef,'sanction letter ref')}). But, the latest quotation dt. ${blankOr(s.latestQuotationDate,'latest quotation date')} has an estimate of Rs. ${blankOr(s.latestProjectCost,'latest project cost')}/-</p>
+
+    <p>Hence, we are increasing the project cost to the latest estimate of Rs. ${blankOr(s.latestProjectCost,'latest project cost')}/- which will be funded by a TL of Rs. ${blankOr(s.loanAmount,'loan amount')}/-, capital subsidy of Rs. ${blankOr(s.subsidyAmount,'subsidy amount')}/- and the borrower's own contribution of Rs. ${blankOr(s.ownContribution,'own contribution')}/-</p>
+
+    <p>${escapeHtml(narrativeText)}</p>
+  `;
+  return html;
+}
+
+document.getElementById('generateBtn').addEventListener('click', () => {
+  state.finalHtml = generateWriteup();
+  goToStep(3);
+  renderDoc();
+});
+
+document.getElementById('regenBtn').addEventListener('click', () => {
+  if(state.finalHtml && !confirm('This will overwrite any direct edits made to the text below with a fresh version built from the Variables form. Continue?')) return;
+  state.finalHtml = generateWriteup();
+  renderDoc();
+  showToast('Regenerated from variables.');
+});
+
+function renderDoc(){
+  document.querySelector('[data-key="docDate"]').innerText = state.docDate || todayStr();
+  document.getElementById('writeupDoc').innerHTML = state.finalHtml || generateWriteup();
+}
+
+// God Mode
+document.getElementById('godModeToggle').addEventListener('change', function(){
+  const doc = document.getElementById('writeupDoc');
+  doc.contentEditable = this.checked ? 'true' : 'false';
+  doc.classList.toggle('editing', this.checked);
+  showToast(this.checked ? '⚡ God Mode ON — click anywhere in the text to edit it directly.' : 'God Mode OFF');
+});
+document.getElementById('writeupDoc').addEventListener('blur', function(){
+  if(this.contentEditable === 'true') state.finalHtml = this.innerHTML;
+});
+
+// --- COPY / EXPORT / IMPORT ---
+document.getElementById('copyTextBtn').addEventListener('click', () => {
+  const text = document.getElementById('writeupDoc').innerText;
+  navigator.clipboard.writeText(text).then(() => showToast('✔ Write-up text copied to clipboard.'));
+});
+
+function sanitizeForFilename(s){ return (s||'').toString().trim().replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').trim(); }
+function buildExportFilename(){
+  const name = sanitizeForFilename(state.applicantName) || 'Unnamed Applicant';
+  const dateStr = todayStr().replace(/\//g,'');
+  return `${name} LLMS Recommendation ${dateStr}.json`;
+}
+document.getElementById('exportJsonBtn').addEventListener('click', () => {
+  state.finalHtml = document.getElementById('writeupDoc').innerHTML;
+  const json = JSON.stringify(state, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = buildExportFilename();
+  document.body.appendChild(a); a.click(); a.remove();
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(json).catch(()=>{}); }
+  showToast('⭳ JSON downloaded (and copied to clipboard as a backup).');
+});
+document.getElementById('importJsonBtn').addEventListener('click', () => document.getElementById('importJsonFile').click());
+document.getElementById('importJsonFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try{
+      const obj = JSON.parse(ev.target.result);
+      state = Object.assign(defaultState(), obj);
+      renderForm();
+      goToStep(3);
+      renderDoc();
+      showToast('✔ Recommendation loaded from JSON.');
+    }catch(err){ showToast('Could not read that file — ' + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function goToStep(n){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+n).classList.add('active');
+  document.querySelectorAll('.step-pill').forEach(p => p.classList.toggle('active', parseInt(p.dataset.step) === n));
+}
+document.querySelectorAll('.step-pill').forEach(p => p.addEventListener('click', () => {
+  const n = parseInt(p.dataset.step);
+  if(n===3 && !state.finalHtml) state.finalHtml = generateWriteup();
+  if(n===3) renderDoc();
+  goToStep(n);
+}));
+
+renderForm();
+goToStep(1);
+</script>
+</body>
+</html>

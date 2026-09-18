@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loan Appraisal Prompt & Snippet Studio</title>
+<style>
+  :root {
+    --ink: #0f172a; --ink-soft: #475569; --bg: #f8fafc; --surface: #ffffff;
+    --border: #cbd5e1; --accent: #2563eb; --accent-hover: #1d4ed8;
+    --success: #10b981; --warning: #f59e0b;
+    --font: system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
+  body { background: var(--bg); color: var(--ink); padding: 20px; font-size: 14px; line-height: 1.5; }
+  
+  .app-container { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+  
+  /* Header & Tools */
+  .header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 15px 20px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .header h1 { font-size: 1.25rem; font-weight: 700; color: var(--ink); }
+  .toolbar { display: flex; gap: 10px; }
+  
+  /* Buttons */
+  .btn { padding: 8px 12px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.15s; }
+  .btn:hover { background: #f1f5f9; }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent-hover); color: white; }
+  .btn-success { background: var(--success); color: white; border-color: var(--success); }
+  
+  /* Inputs Panel */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; height: calc(100vh - 100px); overflow-y: auto; }
+  .panel-title { font-size: 1rem; font-weight: 700; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--bg); position: sticky; top: -20px; background: var(--surface); z-index: 10; }
+  
+  .form-group { margin-bottom: 12px; }
+  .form-group label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--ink-soft); margin-bottom: 4px; text-transform: uppercase; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; outline: none; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* Output Sections */
+  .output-grid { display: flex; flex-direction: column; gap: 15px; height: calc(100vh - 100px); overflow-y: auto; padding-right: 5px; }
+  .snippet-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 15px; position: relative; }
+  .snippet-card h3 { font-size: 0.9rem; color: var(--accent); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .copy-btn { padding: 4px 8px; font-size: 0.75rem; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; color: var(--ink); }
+  .copy-btn:hover { background: #cbd5e1; }
+  
+  .snippet-content { background: var(--bg); padding: 12px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; border: 1px solid #e2e8f0; }
+  
+  /* Copyable Table */
+  .copy-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+  .copy-table th, .copy-table td { border: 1px solid var(--border); padding: 8px; text-align: left; }
+  .copy-table tr { cursor: pointer; transition: background 0.15s; }
+  .copy-table tr:hover { background: #e0f2fe; }
+  .copy-table tr:active { background: #bae6fd; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 100; }
+  .modal { background: var(--surface); width: 600px; padding: 20px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+  .modal h2 { margin-bottom: 10px; font-size: 1.1rem; }
+  .modal textarea { width: 100%; height: 200px; margin-bottom: 15px; font-family: monospace; font-size: 0.85rem; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
+  
+  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: white; padding: 10px 20px; border-radius: 6px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 1000; }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="header">
+    <h1>Loan Prompt Studio</h1>
+    <div class="toolbar">
+      <button class="btn" onclick="openCbsModal()">📥 Import CBS Data</button>
+      <button class="btn" onclick="exportData()">💾 Export JSON</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">📂 Import JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </div>
+
+  <!-- INPUTS PANEL -->
+  <div class="panel">
+    <div class="panel-title">Variables & Assumptions</div>
+    
+    <div class="form-group"><label>Applicant Name</label><input type="text" id="i_name" value="Ravikumar K"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Constitution</label><input type="text" id="i_const" value="Individual"></div>
+      <div class="form-group"><label>Firm Name</label><input type="text" id="i_firm" value="Ravi Travels"></div>
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group"><label>Age / Dependents</label><input type="text" id="i_age" value="42 years | 0"></div>
+      <div class="form-group"><label>CIBIL Score</label><input type="text" id="i_cibil" value="786"></div>
+    </div>
+
+    <div class="form-group"><label>Address / District</label><input type="text" id="i_address" value="Trichy District, Tamil Nadu"></div>
+
+    <hr style="margin:15px 0; border:0; border-top:1px solid var(--border);">
+
+    <div class="form-row">
+      <div class="form-group"><label>Loan Amount (₹)</label><input type="number" id="i_loan" value="882455"></div>
+      <div class="form-group"><label>ROI (% p.a.)</label><input type="number" step="0.1" id="i_roi" value="9.65"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Scheme</label>
+        <select id="i_scheme">
+          <option>PMMY Sishu</option>
+          <option>PMMY Kishore</option>
+          <option selected>PMMY Tarun</option>
+          <option>PMMY Tarun Plus</option>
+          <option>Stand-Up India</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Guarantee</label>
+        <select id="i_guar">
+          <option>CGFMU</option>
+          <option>CGTMSE</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Subsidy Scheme</label>
+        <select id="i_sub_scheme">
+          <option>AABCS</option>
+          <option>CM-ARISE</option>
+          <option>NEEDS</option>
+          <option>PMEGP</option>
+          <option>UYEGP</option>
+          <option selected>Plain MUDRA</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Subsidy Amount (₹)</label><input type="number" id="i_sub_amt" value="514765"></div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group"><label>Borrower Margin (₹)</label><input type="number" id="i_margin_amt" value="73538"></div>
+      <div class="form-group"><label>Tenor / Morat (M)</label><input type="text" id="i_tenor" value="84 / 3"></div>
+    </div>
+
+    <hr style="margin:15px 0; border:0; border-top:1px solid var(--border);">
+
+    <div class="form-group"><label>Asset Details</label><input type="text" id="i_asset" value="Maruti Suzuki Tour M (CNG)"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Asset Cost (₹)</label><input type="number" id="i_cost" value="1470758"></div>
+      <div class="form-group"><label>Dealer</label><input type="text" id="i_dealer" value="ABT Maruti, Trichy"></div>
+    </div>
+
+    <div class="form-group"><label>Business/Route Nature</label><input type="text" id="i_route" value="Urban tourism, passenger taxi"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Run / Days / Tariff</label><input type="text" id="i_run" value="100 KM | 25 days | ₹25/KM"></div>
+      <div class="form-group"><label>Mileage / Fuel Prc</label><input type="text" id="i_fuel" value="10 KM/L | ₹102/L"></div>
+    </div>
+
+  </div>
+
+  <!-- OUTPUTS PANEL -->
+  <div class="output-grid">
+    
+    <!-- SECTION A -->
+    <div class="snippet-card">
+      <h3>Section (A): Scheme & Term Formulation <button class="copy-btn" onclick="copyId('out_a', this)">📋 Copy</button></h3>
+      <div class="snippet-content" id="out_a"></div>
+    </div>
+
+    <!-- SECTION B -->
+    <div class="snippet-card">
+      <h3>Section (B): Net Means Table <span style="font-size:0.75rem; font-weight:normal; color:var(--ink-soft);">(Click any row to copy)</span></h3>
+      <table class="copy-table">
+        <tbody>
+          <tr onclick="copyText('Upto Rs.1.00 lac | Very small means', this)"><td>Upto Rs.1.00 lac</td><td>Very small means</td></tr>
+          <tr onclick="copyText('Above Rs.1.00 lac to Rs.4.00 lacs | Small means', this)"><td>Above Rs.1.00 lac to Rs.4.00 lacs</td><td>Small means</td></tr>
+          <tr onclick="copyText('Above Rs.4.00 lacs to Rs.10.00 lacs | Moderate means', this)"><td>Above Rs.4.00 lacs to Rs.10.00 lacs</td><td>Moderate means</td></tr>
+          <tr onclick="copyText('Above Rs.10.00 lacs to Rs.25.00 lacs | Fair means', this)"><td>Above Rs.10.00 lacs to Rs.25.00 lacs</td><td>Fair means</td></tr>
+          <tr onclick="copyText('Above Rs.25.00 lacs to Rs.1.00 crore | Good means', this)"><td>Above Rs.25.00 lacs to Rs.1.00 crore</td><td>Good means</td></tr>
+          <tr onclick="copyText('Above Rs.1.00 crore to Rs.10.00 crores | Very good means', this)"><td>Above Rs.1.00 crore to Rs.10.00 crores</td><td>Very good means</td></tr>
+          <tr onclick="copyText('Above Rs.10.00 crore to Rs.25.00 crores | Large means', this)"><td>Above Rs.10.00 crore to Rs.25.00 crores</td><td>Large means</td></tr>
+          <tr onclick="copyText('Above Rs.25.00 crores | Very large means', this)"><td>Above Rs.25.00 crores</td><td>Very large means</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION C & E & G -->
+    <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+      <div class="snippet-card">
+        <h3>Section (C): Margin & Subsidy <button class="copy-btn" onclick="copyId('out_c', this)">📋 Copy</button></h3>
+        <div class="snippet-content" id="out_c"></div>
+      </div>
+      <div class="snippet-card">
+        <h3>Section (E/G): Upfront Fee / STP <button class="copy-btn" onclick="copyId('out_eg', this)">📋 Copy</button></h3>
+        <div class="snippet-content" id="out_eg"></div>
+      </div>
+    </div>
+
+    <!-- SECTION D -->
+    <div class="snippet-card">
+      <h3>Section (D): Inspection Stipulation <button class="copy-btn" onclick="copyId('out_d', this)">📋 Copy</button></h3>
+      <div class="snippet-content" id="out_d">Inspection is stipulated at half yearly intervals. SMECC/RASMECC/RACC will do the Post disbursement inspection of the unit within 1 month and thereafter, at half yearly intervals. During inspection, SMECC/RASMECC/RACC will obtain Utilization certificate from the customer. - "STANDARD OPERATING PROCEDURE ON PRADHAN MANTRI MUDRA YOJANA(PMMY)" Dt. 23.08.2023</div>
+    </div>
+
+    <!-- SECTION F -->
+    <div class="snippet-card">
+      <h3>Section (F): Borrower Profile Text <button class="copy-btn" onclick="copyId('out_f', this)">📋 Copy</button></h3>
+      <div class="snippet-content" id="out_f"></div>
+    </div>
+
+    <div class="snippet-card">
+      <h3>Section (F2): Positive Text Templates <button class="copy-btn" onclick="copyId('out_f2', this)">📋 Copy</button></h3>
+      <div class="snippet-content" id="out_f2">1. The applicant possesses deep localized knowledge of the trade area, ensuring sustained client relationships and steady cash flows.
+2. Demonstrating a proactive approach, the borrower has secured informal tie-ups with local vendors, securing a captive market for the proposed activity.
+3. Years of hands-on experience in the sector have equipped the promoter with the necessary technical know-how to navigate market fluctuations effectively.
+4. The business model is resilient and highly aligned with current regional demands, showing excellent potential for achieving the projected turnover.
+5. With a proven track record of diligent operations in similar capacities, the applicant exhibits the sheer determination required to successfully run and scale this enterprise.</div>
+    </div>
+
+    <!-- SECTION H -->
+    <div class="snippet-card">
+      <h3>Section (H): Need for Acquisition <button class="copy-btn" onclick="copyId('out_h', this)">📋 Copy</button></h3>
+      <div class="snippet-content" id="out_h">1. Migrating from a rental/lease model to an owned asset significantly reduces monthly cash burn, redirecting funds toward equity buildup and profitability.
+2. Acquiring the asset ensures operational autonomy, eliminating dependency on third-party availability during peak seasonal demand.
+3. The new asset will drastically reduce ongoing maintenance breakdowns and downtime associated with the currently utilized older/rented fleet.
+4. Asset ownership acts as a catalyst for business expansion, allowing the firm to bid for larger contracts that mandate dedicated vehicle/machinery allocation.
+5. The acquisition directly enhances the net worth of the proprietor, creating a tangible security base while improving the unit's overall EBITDA margins.</div>
+    </div>
+
+    <!-- SECTION I: AI PROMPT -->
+    <div class="snippet-card" style="border: 2px solid var(--accent);">
+      <h3>Section (I): AI Based Appraisal Prompt <button class="btn btn-primary" onclick="copyId('out_i', this)" style="padding:4px 12px;">📋 Copy Prompt for AI</button></h3>
+      <textarea id="out_i" style="width:100%; height:400px; padding:12px; font-family:monospace; font-size:0.85rem; border:1px solid var(--border); border-radius:6px; background:var(--bg); resize:vertical;" readonly></textarea>
+    </div>
+
+  </div>
+</div>
+
+<!-- CBS Extractor Modal -->
+<div class="modal-overlay" id="cbsModal">
+  <div class="modal">
+    <h2>Import from CBS Extractor</h2>
+    <p style="font-size:0.85rem; color:var(--ink-soft); margin-bottom:10px;">Paste the tab-delimited text generated by your CBS console extractor script here.</p>
+    <textarea id="cbsPasteArea" placeholder="Paste data here..."></textarea>
+    <div style="display:flex; justify-content:flex-end; gap:10px;">
+      <button class="btn" onclick="closeCbsModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="processCbsData()">Process & Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast">Copied to clipboard!</div>
+
+<script>
+  // DOM Elements
+  const inputs = document.querySelectorAll('input, select, textarea');
+  inputs.forEach(el => el.addEventListener('input', generateOutputs));
+
+  function fmt(num) {
+    if (!num) return "0";
+    return Number(num).toLocaleString('en-IN');
+  }
+
+  function generateOutputs() {
+    // Get values
+    const loan = parseInt(document.getElementById('i_loan').value) || 0;
+    const scheme = document.getElementById('i_scheme').value;
+    const guar = document.getElementById('i_guar').value;
+    const subScheme = document.getElementById('i_sub_scheme').value;
+    const subAmt = parseInt(document.getElementById('i_sub_amt').value) || 0;
+    const margin = parseInt(document.getElementById('i_margin_amt').value) || 0;
+    const tenorStr = document.getElementById('i_tenor').value.split('/');
+    const tenor = (tenorStr[0] || "84").trim();
+    const morat = (tenorStr[1] || "3").trim();
+    
+    const name = document.getElementById('i_name').value;
+    const consti = document.getElementById('i_const').value;
+    const firm = document.getElementById('i_firm').value;
+    const age = document.getElementById('i_age').value;
+    const cibil = document.getElementById('i_cibil').value;
+    const address = document.getElementById('i_address').value;
+    const roi = document.getElementById('i_roi').value;
+    
+    const asset = document.getElementById('i_asset').value;
+    const cost = parseInt(document.getElementById('i_cost').value) || 0;
+    const dealer = document.getElementById('i_dealer').value;
+    const route = document.getElementById('i_route').value;
+    
+    const run = document.getElementById('i_run').value;
+    const fuel = document.getElementById('i_fuel').value;
+
+    const totalMargin = margin + subAmt;
+
+    // SECTION A
+    document.getElementById('out_a').innerText = `Term loan of Rs. ${fmt(loan)}/- under ${scheme} covered under ${guar} with a capital subsidy of Rs. ${fmt(subAmt)} under ${subScheme} scheme for a tenor of ${tenor} months including a moratorium period of ${morat} months.`;
+
+    // SECTION C
+    document.getElementById('out_c').innerText = `The borrower brings a margin of Rs. ${fmt(totalMargin)}/- (Rs. ${fmt(margin)} of his own funds and Rs. ${fmt(subAmt)} as capital subsidy from Govt under ${subScheme} scheme).`;
+
+    // SECTION E & G (0.5% + GST = 0.5% * 1.18 = 0.59%)
+    const feeAmt = Math.round(loan * 0.0059);
+    document.getElementById('out_eg').innerText = `0.5 percent of the loan amount plus applicable GST.\n\nCalculated Fee (inclusive of GST): Rs. ${fmt(feeAmt)}/-`;
+
+    // SECTION F
+    document.getElementById('out_f').innerText = `${name} is the proprietor of ${firm} - date of commencement of business - [ commencement date ] with Udyam Registration No [ Udyam Reg. No ]\n\nAadhaar No: [ Aadhaar No ]\nPAN: [ PAN ]\nDriving Licence: [ DL No ] with badge No. [ badge No ] which is valid upto [ validity date ]\n\nIndividual CIBIL (Control No. [ Control No ]) was verified and credit history was found to be satisfactory with a score of ${cibil} and no overdues. The applicant has been working in the transport sector for the last [ experience ] years.\n\nNote: The latest quotation (issued by supplier ${dealer}) submitted by the borrower has an estimate of Rs. ${fmt(cost)}/- which will be funded by a TL of Rs. ${fmt(loan)}/-, capital subsidy of Rs. ${fmt(subAmt)}/- and the borrower's own contribution of Rs. ${fmt(margin)}/-\n\nOver the years the applicant operating as a ${consti} in ${address}, has demonstrated a firm grasp of the regional transport micro-economy. The chosen business model - ${route} - capitalizes on steady local demand, providing a stable revenue stream.`;
+
+    // SECTION I (Main AI Prompt)
+    const marginPct = cost > 0 ? ((margin/cost)*100).toFixed(2) : 0;
+    const subPct = cost > 0 ? ((subAmt/cost)*100).toFixed(2) : 0;
+    const ltv = cost > 0 ? ((loan/cost)*100).toFixed(1) : 0;
+
+    document.getElementById('out_i').value = `Act as a Senior Bank Credit Appraiser, SME/SRTO Underwriter, and Credit Risk Analyst specializing in Micro & Small Enterprises (MSE) and SRTO (Small Road Transport Operator) financing under Indian government-sponsored schemes (MUDRA, PMEGP, NEEDS, CGTMSE/CGFMU).
+
+I am appraising a term loan proposal for a micro-enterprise commercial vehicle purchase. You have (or may have) access to real-time web search. Use it wherever this prompt asks you to verify or enrich a figure, and clearly cite what you find. Produce an exhaustive techno-economic viability assessment, operational benchmark breakdown, 5-year financial statement projection, a formal risk-scoring matrix, an explicit credit decision recommendation, and a set of citation-backed justification snippets ready for CAF/board use.
+
+---
+### CASE INPUT VARIABLES
+**Applicant Profile**
+- Borrower Name & Constitution: ${name} / ${consti}
+- Firm Name: ${firm}
+- Age & Dependents: ${age}
+- Operating Location / District & State: ${address}
+- Credit Information / CIBIL Score: ${cibil}
+
+**Asset & Financing**
+- Proposed Asset / Vehicle Model: ${asset}
+- Dealer Quotation / On-Road Cost: ₹${fmt(cost)} (Dealer: ${dealer})
+- Business Model / Route Nature: ${route}
+- Target Scheme: ${scheme} (Subsidy Scheme: ${subScheme})
+- Borrower Margin Contribution: ${marginPct}% (₹${fmt(margin)})
+- Expected Government Subsidy: ${subPct}% (₹${fmt(subAmt)})
+- Proposed Bank Term Loan Quantum: ₹${fmt(loan)}
+- Interest Rate & Repayment Tenure: ${roi}% p.a., ${tenure} months with ${morat} month(s) moratorium
+
+**Operational Assumptions**
+- Base Run & Tariff: ${run}
+- Mileage & Fuel: ${fuel}
+- Driving Arrangement: Owner-driven (owner/proprietor is the primary driver)
+
+**Indicative Pre-Screening Snapshot**
+- Loan-to-Cost (LTV): ${ltv}%
+- Statutory Guarantee Routing: ${guar}
+---
+
+### SECTION 0: MANDATORY WEB RESEARCH & DATA VERIFICATION DIRECTIVE
+Before finalizing your assessment, use web search to verify:
+1. Prevailing bank lending rate band for vehicle/MSE loans — is ${roi}% p.a. market-aligned?
+2. Current retail diesel/fuel price in or near ${address.split(',')[0]} — cross-check against user-supplied price.
+3. Realistic resale/depreciation benchmark for ${asset}.
+4. Latest official guidelines for ${scheme} and ${subScheme}.
+
+#### SECTION 1: VEHICLE SPECIFICATIONS & ROUTE VIABILITY
+1. Technical asset baseline for ${asset} (Engine, GVW, certified vs real mileage).
+2. Operational run benchmarks (Conservative, Realistic base on ${run}, Aggressive).
+
+#### SECTION 2: OPERATIONAL EXPENDITURE BREAKDOWN (BASE CASE)
+Itemized monthly and per-KM cost analysis (Fuel, Driver, Routine Maintenance, Statutory & Fixed Overheads, Net Surplus).
+
+#### SECTION 3: PROJECT OUTLAY, FINANCING & STATUTORY GUARANTEE ROUTING
+1. Means of Finance table.
+2. Statutory Guarantee Coverage determination (${guar}).
+
+#### SECTION 4: 5-YEAR WDV DEPRECIATION SCHEDULE
+Build a full 5-year depreciation table following Income Tax Act rules (30% WDV) for commercial vehicles.
+
+#### SECTION 5: 3-COMPONENT FINANCIAL STATEMENTS & DEBT SERVICING (5-YEAR PROJECTION)
+Provide an annual 5-year tabular financial projection incorporating 4% annual freight tariff escalation and 4% operating cost escalation. Include P&L, Cash Flow (with DSCR calculations), and Balance Sheet.
+
+#### SECTION 6: FORMAL APPRAISAL JUSTIFICATION NOTE
+Generate 3 detailed, professional paragraphs formatted for direct insertion into an official Bank Credit Proposal (CAF).
+
+#### SECTION 7: FIVE-C CREDIT RISK SCORING MATRIX
+Score Character, Capacity, Capital, Collateral, and Conditions (1-5 scale).
+
+#### SECTION 8: FINAL CREDIT DECISION & RECOMMENDATION
+Provide an explicit recommendation (APPROVE / APPROVE WITH CONDITIONS / REFER / DECLINE) supported by bullet points.
+
+#### SECTION 9: JUSTIFICATION SNIPPET LIBRARY
+Produce 4 short, ready-to-paste snippets (Eligibility, Viability, Risk Mitigation, Customer Explanation).`;
+  }
+
+  // Utilities & Interactions
+  function copyText(text, btnElement = null) {
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+    
+    showToast();
+    if(btnElement && btnElement.tagName === "TR") {
+      const origBg = btnElement.style.background;
+      btnElement.style.background = "#86efac";
+      setTimeout(() => btnElement.style.background = origBg, 500);
+    }
+  }
+
+  function copyId(elementId, btnElement) {
+    const el = document.getElementById(elementId);
+    copyText(el.value !== undefined ? el.value : el.innerText);
+    
+    const origText = btnElement.innerText;
+    btnElement.innerText = "✔ Copied";
+    btnElement.style.background = "var(--success)";
+    btnElement.style.color = "white";
+    setTimeout(() => {
+      btnElement.innerText = origText;
+      btnElement.style.background = "";
+      btnElement.style.color = "";
+    }, 2000);
+  }
+
+  function showToast() {
+    const toast = document.getElementById('toast');
+    toast.style.opacity = '1';
+    setTimeout(() => toast.style.opacity = '0', 2000);
+  }
+
+  // JSON State Management[cite: 1]
+  function getStateObj() {
+    const state = {};
+    inputs.forEach(el => { if(el.id) state[el.id] = el.value; });
+    return state;
+  }
+  
+  function exportData() {
+    const json = JSON.stringify(getStateObj(), null, 2);
+    const blob = new Blob([json], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Loan_Prompt_Data_${document.getElementById('i_name').value.replace(/\s+/g,'_')}.json`;
+    a.click();
+  }
+  
+  function importData(event) {
+    const file = event.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        Object.keys(data).forEach(key => {
+          const el = document.getElementById(key);
+          if (el) el.value = data[key];
+        });
+        generateOutputs();
+      } catch(err) { alert("Invalid JSON file"); }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Reset
+  }
+
+  // CBS Extractor Import Logic[cite: 1]
+  function openCbsModal() { document.getElementById('cbsModal').style.display = 'flex'; }
+  function closeCbsModal() { document.getElementById('cbsModal').style.display = 'none'; document.getElementById('cbsPasteArea').value = ''; }
+  
+  function processCbsData() {
+    const text = document.getElementById('cbsPasteArea').value;
+    if(!text.trim()) return closeCbsModal();
+
+    const lines = text.split('\n');
+    const fields = {};
+    lines.forEach(l => {
+      let match = l.match(/^(.*?)(?:\t| {2,}|[\u2002\u2003\u00a0]+)(.*)$/);
+      if(match) {
+        fields[match[1].toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()] = match[2].trim();
+      } else {
+        let parts = l.split('\t');
+        if(parts.length >= 2) fields[parts[0].toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()] = parts.slice(1).join(' ').trim();
+      }
+    });
+
+    const getField = (keys) => { for(let k of keys) if(fields[k]) return fields[k]; return ''; };
+
+    // Map common CBS fields to our inputs
+    const cbsName = getField(['customer name', 'account name', 'name']);
+    if(cbsName) document.getElementById('i_name').value = cbsName;
+    
+    const cbsLoan = getField(['sanctioned limit', 'application amount', 'approved amount', 'limit']);
+    if(cbsLoan) document.getElementById('i_loan').value = cbsLoan.replace(/,/g, '');
+
+    const cbsAddress = getField(['address', 'registered office address', 'district']);
+    if(cbsAddress) document.getElementById('i_address').value = cbsAddress;
+    
+    generateOutputs();
+    closeCbsModal();
+  }
+
+  // Init
+  generateOutputs();
+</script>
+</body>
+</html>

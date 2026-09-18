@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transport & Micro Industry Loan Prompt Studio v2</title>
+  <style>
+    :root {
+      --primary: #153e75;
+      --primary-dark: #0c2547;
+      --primary-light: #e9f0f9;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --success: #059669;
+      --success-light: #ecfdf5;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --border: #cbd5e1;
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-size: 13.5px;
+      line-height: 1.5;
+      padding: 16px;
+    }
+
+    .app-container {
+      max-width: 1580px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    header {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+    }
+
+    .brand-title h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand-title p {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .badge-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 3px 9px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .disclaimer-note {
+      font-size: 0.71rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+      background: #f8fafc;
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      max-width: 1580px;
+    }
+
+    .disclaimer-note strong {
+      color: var(--primary-dark);
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 600px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 1240px) {
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(15, 23, 42, 0.03);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: #fafcff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .card-header h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .card-body {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .presets-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .preset-btn {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      color: var(--text-muted);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .preset-btn:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .warning-banner {
+      display: none;
+      background: var(--warning-light);
+      border: 1px solid var(--warning);
+      color: #92400e;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .stats-strip {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .stat-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+
+    .stat-sub {
+      font-size: 0.68rem;
+      color: #64748b;
+    }
+
+    .risk-badge {
+      display: inline-block;
+      width: fit-content;
+      padding: 1px 7px;
+      border-radius: 5px;
+      font-size: 0.88rem !important;
+    }
+
+    .risk-green { color: var(--success) !important; background: var(--success-light); }
+    .risk-amber { color: var(--warning) !important; background: var(--warning-light); }
+    .risk-red   { color: var(--danger) !important; background: var(--danger-light); }
+
+    .sec-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--primary);
+      border-left: 3px solid var(--accent);
+      padding-left: 6px;
+      margin-top: 4px;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 500px) {
+      .form-grid-2, .form-grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    label {
+      font-size: 0.71rem;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 9px;
+      font-size: 0.83rem;
+      color: #0f172a;
+      outline: none;
+      background: #ffffff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+    }
+
+    .input-error {
+      border-color: var(--danger) !important;
+      box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.12) !important;
+    }
+
+    .output-panel {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .actions-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-outline {
+      background: #fff;
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-outline:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      background: #047857;
+    }
+
+    .prompt-viewer {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      padding: 16px;
+      border-radius: 0 0 10px 10px;
+      height: 760px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: none;
+      outline: none;
+      resize: vertical;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      border-left: 4px solid var(--success);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header>
+      <div class="brand-title">
+        <h1>
+          <span>Transport & Micro Industry Loan Prompt Studio</span>
+          <span class="badge-pill">SRTO & MSE Underwriting</span>
+          <span class="badge-pill" style="background:var(--success-light); color:var(--success);">v2 · Decision-Support</span>
+        </h1>
+        <p>Generates audit-ready, 11-section AI appraisal prompts with web-verified justification citations, 5-C risk scoring and a decision recommendation</p>
+      </div>
+      <div class="actions-bar">
+        <button class="btn btn-outline" onclick="resetDefaults()">Reset Defaults</button>
+        <button class="btn btn-outline" onclick="saveCaseJSON()">💾 Save Case</button>
+        <button class="btn btn-outline" onclick="triggerLoadCase()">📂 Load Case</button>
+        <input type="file" id="loadCaseInput" accept=".json,application/json" style="display:none" onchange="loadCaseFile(event)">
+        <button class="btn btn-outline" onclick="downloadPromptText()">Download Prompt (.txt)</button>
+        <button class="btn btn-primary" onclick="copyPromptToClipboard()">📋 Copy Prompt</button>
+      </div>
+    </header>
+
+    <div class="disclaimer-note">
+      <strong>Decision-support tool only.</strong> This studio produces a prompt for an AI assistant to draft an appraisal, risk score and recommendation — it does not itself sanction loans. Any AI-generated figures, citations and the final recommendation must be independently verified against source documents and approved by the bank's competent sanctioning authority under its delegated lending powers, KYC/AML norms and RBI's Fair Practices Code before disbursal.
+    </div>
+
+    <div class="workspace-grid">
+      <!-- LEFT: Parameter Inputs -->
+      <div class="card">
+        <div class="card-header">
+          <h2>1. Proposal & Operational Parameters</h2>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Reactive recalculation</span>
+        </div>
+
+        <div class="card-body">
+          <!-- Quick Presets -->
+          <div class="input-group">
+            <label>Quick Case Presets</label>
+            <div class="presets-row">
+              <button class="preset-btn" onclick="applyPreset('maxx_pmegep')">Mahindra Maxx (PMEGP)</button>
+              <button class="preset-btn" onclick="applyPreset('tata_mudra')">Tata Ace Gold (MUDRA)</button>
+              <button class="preset-btn" onclick="applyPreset('passenger_cab')">Tourist Cab (NEEDS)</button>
+              <button class="preset-btn" onclick="applyPreset('inter_district')">Eicher Feeder (CGTMSE)</button>
+            </div>
+          </div>
+
+          <!-- Validation Warnings -->
+          <div class="warning-banner" id="validationWarnings"></div>
+
+          <!-- Real-Time Metrics Strip -->
+          <div class="stats-strip">
+            <div class="stat-box">
+              <span class="stat-label">Term Loan</span>
+              <span class="stat-val" id="dispLoanAmt">₹0</span>
+              <span class="stat-sub" id="dispSchemeSub">—</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Promoter Margin</span>
+              <span class="stat-val" id="dispMarginAmt">₹0</span>
+              <span class="stat-sub" id="dispMarginPct">—</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Govt Guarantee</span>
+              <span class="stat-val" id="dispGuaranteeName" style="color:var(--accent);">—</span>
+              <span class="stat-sub" id="dispGuaranteeFee">—</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Est. Mo. EMI</span>
+              <span class="stat-val" id="dispEmiAmt">₹0</span>
+              <span class="stat-sub" id="dispEmiTenure">—</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Indicative DSCR</span>
+              <span class="stat-val" id="dispIndDscr">—</span>
+              <span class="stat-sub" id="dispIndDscrSub">Pre-screening only</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Loan-to-Cost</span>
+              <span class="stat-val" id="dispLtc">—</span>
+              <span class="stat-sub" id="dispLtcSub">—</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Obligation / Inflow</span>
+              <span class="stat-val" id="dispDbr">—</span>
+              <span class="stat-sub" id="dispDbrSub">—</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Indicative Risk Grade</span>
+              <span class="stat-val risk-badge" id="dispRiskGrade">—</span>
+              <span class="stat-sub" id="dispRiskGradeSub">—</span>
+            </div>
+          </div>
+
+          <!-- Borrower Credentials -->
+          <div class="sec-title">Borrower & Identity Profile</div>
+          <div class="form-grid-2">
+            <div class="input-group">
+              <label for="borrowerName">Borrower Name</label>
+              <input type="text" id="borrowerName" value="K. Muruganandam" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="constitution">Constitution Type</label>
+              <select id="constitution" onchange="updateAll()">
+                <option value="Sole Proprietorship" selected>Sole Proprietorship</option>
+                <option value="Individual">Individual</option>
+                <option value="Partnership Firm">Partnership Firm</option>
+                <option value="Private Limited Company">Private Limited Company</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="input-group">
+              <label for="location">Operating District & State</label>
+              <input type="text" id="location" value="Tiruchirappalli District, Tamil Nadu" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="cibilSummary">CIBIL Score & Track Record</label>
+              <input type="text" id="cibilSummary" value="754 score, clean repayment track, nil overdues" oninput="updateAll()">
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="input-group">
+              <label for="applicantAge">Applicant Age (Yrs)</label>
+              <input type="number" id="applicantAge" value="38" min="18" max="75" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="dependents">Dependents</label>
+              <input type="number" id="dependents" value="3" min="0" max="15" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="bankVintage">Bank Relationship</label>
+              <input type="text" id="bankVintage" value="SB a/c 5 yrs with bank, no adverse remarks" oninput="updateAll()">
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="input-group">
+              <label for="coApplicant">Co-Applicant / Guarantor</label>
+              <input type="text" id="coApplicant" value="None" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="existingEmi">Existing EMI Oblign. (₹/Mo)</label>
+              <input type="number" id="existingEmi" value="0" step="500" min="0" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="otherIncome">Other Household Income (₹/Mo)</label>
+              <input type="number" id="otherIncome" value="8000" step="500" min="0" oninput="updateAll()">
+            </div>
+          </div>
+
+          <!-- Vehicle & Quotation -->
+          <div class="sec-title">Asset & Quotation Details</div>
+          <div class="form-grid-2">
+            <div class="input-group">
+              <label for="assetModel">Vehicle / Asset Model</label>
+              <input type="text" id="assetModel" value="Mahindra Bolero Maxx Pik-Up HD 2.0L" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="assetCost">On-Road Cost (₹)</label>
+              <input type="number" id="assetCost" value="950000" step="5000" min="0" oninput="updateAll()">
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="dealerInfo">Dealer Name & Location</label>
+            <input type="text" id="dealerInfo" value="M/s Ramani Mahindra, Dindigul Main Road, Trichy" oninput="updateAll()">
+          </div>
+
+          <div class="form-grid-3">
+            <div class="input-group">
+              <label for="vehicleCondition">Vehicle Condition</label>
+              <select id="vehicleCondition" onchange="updateAll()">
+                <option value="New" selected>New</option>
+                <option value="Used">Used</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="vehicleAgeYears">Vehicle Age (Yrs, if Used)</label>
+              <input type="number" id="vehicleAgeYears" value="0" min="0" max="20" step="0.5" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="existingVehicles">Existing Fleet Size Owned</label>
+              <input type="number" id="existingVehicles" value="0" min="0" max="200" oninput="updateAll()">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="collateralValue">Additional Collateral / Security Value (₹)</label>
+            <input type="number" id="collateralValue" value="0" step="10000" min="0" oninput="updateAll()">
+          </div>
+
+          <!-- Scheme & Means of Finance -->
+          <div class="sec-title">Scheme & Means of Finance</div>
+          <div class="form-grid-3">
+            <div class="input-group">
+              <label for="schemeName">Target Scheme</label>
+              <select id="schemeName" onchange="onSchemeSelect()">
+                <option value="PMEGP" selected>PMEGP</option>
+                <option value="Plain MUDRA (Tarun)">Plain MUDRA (Tarun)</option>
+                <option value="NEEDS (Tamil Nadu)">NEEDS (Tamil Nadu)</option>
+                <option value="Stand-Up India">Stand-Up India</option>
+                <option value="Commercial CGTMSE">Commercial CGTMSE</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="marginPct">Margin (%)</label>
+              <input type="number" id="marginPct" value="10.0" step="0.5" min="0" max="100" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="subsidyPct">Govt Subsidy (%)</label>
+              <input type="number" id="subsidyPct" value="25.0" step="1.0" min="0" max="100" oninput="updateAll()">
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="input-group">
+              <label for="roiPct">Interest Rate (% p.a.)</label>
+              <input type="number" id="roiPct" value="9.50" step="0.05" min="0" max="36" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="tenureMonths">Tenure (Months)</label>
+              <input type="number" id="tenureMonths" value="60" min="1" max="180" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="moratMonths">Moratorium (Months)</label>
+              <input type="number" id="moratMonths" value="3" min="0" max="24" oninput="updateAll()">
+            </div>
+          </div>
+
+          <!-- Route & Operational Economics -->
+          <div class="sec-title">Operational Benchmarks & Corridors</div>
+          <div class="input-group">
+            <label for="businessModel">Route Nature / Cargo Activity</label>
+            <input type="text" id="businessModel" value="Semi-urban agricultural produce & wholesale FMCG distribution" oninput="updateAll()">
+          </div>
+
+          <div class="form-grid-3">
+            <div class="input-group">
+              <label for="dailyKm">Daily Run (KM)</label>
+              <input type="number" id="dailyKm" value="150" min="0" max="2000" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="opDays">Working Days/Mo</label>
+              <input type="number" id="opDays" value="25" min="1" max="31" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="mileageKmpl">Mileage (KM/L)</label>
+              <input type="number" id="mileageKmpl" value="12.5" step="0.5" min="0.5" max="60" oninput="updateAll()">
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="input-group">
+              <label for="fuelPrice">Diesel Price (₹/L)</label>
+              <input type="number" id="fuelPrice" value="94.25" step="0.25" min="0" max="200" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="freightTariff">Tariff Rate (₹/KM)</label>
+              <input type="number" id="freightTariff" value="24.0" step="0.5" min="0" max="500" oninput="updateAll()">
+            </div>
+            <div class="input-group">
+              <label for="monthlyMaint">Maint Provision (₹/Mo)</label>
+              <input type="number" id="monthlyMaint" value="7500" step="250" min="0" oninput="updateAll()">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="input-group">
+              <label for="ownerDriven">Driving Arrangement</label>
+              <select id="ownerDriven" onchange="updateAll()">
+                <option value="Owner-Driven" selected>Owner-Driven</option>
+                <option value="Hired Driver">Hired Driver</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="driverWage">Driver/Crew Wage (₹/Mo)</label>
+              <input type="number" id="driverWage" value="0" step="500" min="0" oninput="updateAll()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Generated Prompt Output -->
+      <div class="card output-panel">
+        <div class="card-header">
+          <h2>2. Generated AI Prompt (Ready to Copy)</h2>
+          <div class="actions-bar">
+            <span style="font-size: 0.72rem; color: var(--text-muted);" id="promptWordCount">~0 words</span>
+            <button class="btn btn-success" onclick="copyPromptToClipboard()">📋 Copy Prompt</button>
+          </div>
+        </div>
+        <textarea id="promptOutput" class="prompt-viewer" spellcheck="false"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toastMessage">Appraisal prompt copied to clipboard!</div>
+
+  <script>
+    // ---------------------------------------------------------------------
+    // FIELD REGISTRY — single source of truth for save/load and defaults
+    // ---------------------------------------------------------------------
+    const ALL_FIELD_IDS = [
+      'borrowerName','constitution','location','cibilSummary','applicantAge','dependents',
+      'bankVintage','coApplicant','existingEmi','otherIncome',
+      'assetModel','assetCost','dealerInfo','vehicleCondition','vehicleAgeYears',
+      'existingVehicles','collateralValue',
+      'schemeName','marginPct','subsidyPct','roiPct','tenureMonths','moratMonths',
+      'businessModel','dailyKm','opDays','mileageKmpl','fuelPrice','freightTariff',
+      'monthlyMaint','ownerDriven','driverWage'
+    ];
+
+    // ---------------------------------------------------------------------
+    // ROBUST INPUT READERS — never let a blank/garbled field crash the app
+    // ---------------------------------------------------------------------
+    function numVal(id, fallback, opts) {
+      opts = opts || {};
+      const el = document.getElementById(id);
+      let v = el ? parseFloat(el.value) : NaN;
+      if (!isFinite(v)) v = fallback;
+      if (opts.min !== undefined) v = Math.max(opts.min, v);
+      if (opts.max !== undefined) v = Math.min(opts.max, v);
+      return v;
+    }
+
+    function intVal(id, fallback, opts) {
+      opts = opts || {};
+      const el = document.getElementById(id);
+      let v = el ? parseInt(el.value, 10) : NaN;
+      if (!isFinite(v)) v = fallback;
+      if (opts.min !== undefined) v = Math.max(opts.min, v);
+      if (opts.max !== undefined) v = Math.min(opts.max, v);
+      return v;
+    }
+
+    function strVal(id, fallback) {
+      const el = document.getElementById(id);
+      const v = el ? el.value.trim() : '';
+      return v || fallback;
+    }
+
+    function gatherInputs() {
+      return {
+        borrowerName: strVal('borrowerName', 'The Applicant'),
+        constitution: strVal('constitution', 'Individual'),
+        location: strVal('location', 'Not specified'),
+        cibilSummary: strVal('cibilSummary', 'Not provided'),
+        applicantAge: intVal('applicantAge', 35, { min: 18, max: 90 }),
+        dependents: intVal('dependents', 0, { min: 0, max: 15 }),
+        bankVintage: strVal('bankVintage', 'Not specified'),
+        coApplicant: strVal('coApplicant', 'None'),
+        existingEmi: numVal('existingEmi', 0, { min: 0 }),
+        otherIncome: numVal('otherIncome', 0, { min: 0 }),
+
+        assetModel: strVal('assetModel', 'Commercial Vehicle'),
+        assetCost: numVal('assetCost', 0, { min: 0 }),
+        dealerInfo: strVal('dealerInfo', 'Not specified'),
+        vehicleCondition: strVal('vehicleCondition', 'New'),
+        vehicleAgeYears: numVal('vehicleAgeYears', 0, { min: 0, max: 20 }),
+        existingVehicles: intVal('existingVehicles', 0, { min: 0, max: 500 }),
+        collateralValue: numVal('collateralValue', 0, { min: 0 }),
+
+        schemeName: strVal('schemeName', 'Commercial CGTMSE'),
+        marginPct: numVal('marginPct', 20, { min: 0, max: 100 }),
+        subsidyPct: numVal('subsidyPct', 0, { min: 0, max: 100 }),
+        roiPct: numVal('roiPct', 9.5, { min: 0, max: 36 }),
+        tenureMonths: intVal('tenureMonths', 60, { min: 1, max: 180 }),
+        moratMonths: intVal('moratMonths', 0, { min: 0, max: 24 }),
+
+        businessModel: strVal('businessModel', 'General cargo transport'),
+        dailyKm: numVal('dailyKm', 0, { min: 0, max: 2000 }),
+        opDays: numVal('opDays', 25, { min: 1, max: 31 }),
+        mileageKmpl: numVal('mileageKmpl', 10, { min: 0.5, max: 60 }),
+        fuelPrice: numVal('fuelPrice', 95, { min: 0, max: 200 }),
+        freightTariff: numVal('freightTariff', 20, { min: 0, max: 500 }),
+        monthlyMaint: numVal('monthlyMaint', 5000, { min: 0 }),
+        ownerDriven: strVal('ownerDriven', 'Owner-Driven'),
+        driverWage: numVal('driverWage', 0, { min: 0 })
+      };
+    }
+
+    function formatCurrency(num) {
+      if (!isFinite(num)) num = 0;
+      const sign = num < 0 ? '-' : '';
+      return sign + '₹' + Math.round(Math.abs(num)).toLocaleString('en-IN');
+    }
+
+    function calcEmi(loanAmt, roiPct, tenure) {
+      if (loanAmt <= 0 || tenure <= 0) return 0;
+      const r = (roiPct / 100) / 12;
+      if (r === 0) return loanAmt / tenure;
+      const factor = Math.pow(1 + r, tenure);
+      const denom = factor - 1;
+      if (denom === 0) return loanAmt / tenure;
+      return (loanAmt * r * factor) / denom;
+    }
+
+    // ---------------------------------------------------------------------
+    // FINANCE ENGINE
+    // ---------------------------------------------------------------------
+    function calculateFinance(g) {
+      const marginAmt = g.assetCost * (g.marginPct / 100);
+      const subsidyAmt = g.assetCost * (g.subsidyPct / 100);
+      let loanAmt = g.assetCost - marginAmt - subsidyAmt;
+      if (!isFinite(loanAmt) || loanAmt < 0) loanAmt = 0;
+
+      let guaranteeName, feePct, feeAmt;
+      if (loanAmt <= 0) {
+        guaranteeName = 'Not Applicable (Nil Loan)';
+        feePct = 0;
+        feeAmt = 0;
+      } else if (loanAmt <= 1000000) {
+        guaranteeName = 'CGFMU (<= ₹10L)';
+        feePct = 1.00;
+        feeAmt = loanAmt * 0.01;
+      } else {
+        guaranteeName = 'CGTMSE (> ₹10L)';
+        feePct = 1.35;
+        feeAmt = loanAmt * 0.0135 * 1.18; // with 18% GST standard
+      }
+
+      const emi = calcEmi(loanAmt, g.roiPct, g.tenureMonths);
+
+      return {
+        assetCost: g.assetCost,
+        marginPct: g.marginPct,
+        subsidyPct: g.subsidyPct,
+        marginAmt,
+        subsidyAmt,
+        loanAmt,
+        guaranteeName,
+        feePct,
+        feeAmt,
+        emi,
+        roi: g.roiPct,
+        tenure: g.tenureMonths
+      };
+    }
+
+    // ---------------------------------------------------------------------
+    // INDICATIVE PRE-SCREENING RISK SNAPSHOT (client-side, quick reference only —
+    // the AI prompt asks the downstream model to do the full formal assessment)
+    // ---------------------------------------------------------------------
+    function computeRiskSnapshot(g, fin) {
+      const grossInflow = g.dailyKm * g.opDays * g.freightTariff;
+      const fuelCost = g.mileageKmpl > 0 ? (g.dailyKm * g.opDays / g.mileageKmpl) * g.fuelPrice : 0;
+      const netOpSurplus = grossInflow - fuelCost - g.monthlyMaint - g.driverWage;
+      const surplusAfterExisting = netOpSurplus - g.existingEmi;
+      const dscrInd = fin.emi > 0 ? (surplusAfterExisting / fin.emi) : null;
+      const ltcPct = fin.assetCost > 0 ? (fin.loanAmt / fin.assetCost) * 100 : 0;
+      const dbrPct = grossInflow > 0 ? ((g.existingEmi + fin.emi) / grossInflow) * 100 : 0;
+
+      const cibilMatch = g.cibilSummary.match(/\b([3-8]\d{2}|900)\b/);
+      const cibilScore = cibilMatch ? parseInt(cibilMatch[1], 10) : null;
+      const collateralCoverPct = fin.loanAmt > 0 ? (g.collateralValue / fin.loanAmt) * 100 : 0;
+
+      let pts = 0;
+      if (dscrInd !== null) {
+        if (dscrInd >= 1.75) pts += 3;
+        else if (dscrInd >= 1.5) pts += 2;
+        else if (dscrInd >= 1.2) pts += 1;
+      }
+      if (cibilScore !== null) {
+        if (cibilScore >= 750) pts += 3;
+        else if (cibilScore >= 700) pts += 2;
+        else if (cibilScore >= 650) pts += 1;
+      }
+      if (ltcPct > 0) {
+        if (ltcPct <= 75) pts += 2;
+        else if (ltcPct <= 90) pts += 1;
+      }
+      if (collateralCoverPct >= 25) pts += 1;
+
+      let band = 'HIGH', bandClass = 'risk-red';
+      if (pts >= 7) { band = 'LOW'; bandClass = 'risk-green'; }
+      else if (pts >= 4) { band = 'MEDIUM'; bandClass = 'risk-amber'; }
+
+      return {
+        grossInflow, fuelCost, netOpSurplus, surplusAfterExisting,
+        dscrInd, ltcPct, dbrPct, cibilScore, collateralCoverPct,
+        pts, band, bandClass
+      };
+    }
+
+    // ---------------------------------------------------------------------
+    // UI RENDERING
+    // ---------------------------------------------------------------------
+    function updateMetricsDisplay(fin, risk) {
+      document.getElementById('dispLoanAmt').textContent = formatCurrency(fin.loanAmt);
+      document.getElementById('dispMarginAmt').textContent = formatCurrency(fin.marginAmt);
+      document.getElementById('dispMarginPct').textContent = `${fin.marginPct.toFixed(1)}% of Outlay`;
+
+      const scheme = document.getElementById('schemeName').value;
+      document.getElementById('dispSchemeSub').textContent = `${scheme.split(' ')[0]} ${fin.subsidyPct}% Sub`;
+
+      document.getElementById('dispGuaranteeName').textContent = fin.guaranteeName.split(' ')[0];
+      document.getElementById('dispGuaranteeFee').textContent = fin.loanAmt > 0
+        ? `Fee: ${formatCurrency(fin.feeAmt)} (${fin.feePct.toFixed(2)}%)`
+        : 'No loan component';
+
+      document.getElementById('dispEmiAmt').textContent = formatCurrency(fin.emi);
+      document.getElementById('dispEmiTenure').textContent = `${fin.tenure} Mos @ ${fin.roi.toFixed(2)}%`;
+
+      document.getElementById('dispIndDscr').textContent = risk.dscrInd === null ? 'N/A' : risk.dscrInd.toFixed(2) + 'x';
+
+      document.getElementById('dispLtc').textContent = `${risk.ltcPct.toFixed(1)}%`;
+      document.getElementById('dispLtcSub').textContent = 'Loan-to-Cost';
+
+      document.getElementById('dispDbr').textContent = `${risk.dbrPct.toFixed(1)}%`;
+      document.getElementById('dispDbrSub').textContent = 'vs Gross Inflow';
+
+      const gradeEl = document.getElementById('dispRiskGrade');
+      gradeEl.textContent = risk.band;
+      gradeEl.className = 'stat-val risk-badge ' + risk.bandClass;
+      document.getElementById('dispRiskGradeSub').textContent = `Score ${risk.pts}/9 · indicative only`;
+    }
+
+    function renderWarnings(g, fin) {
+      const msgs = [];
+      if (!document.getElementById('borrowerName').value.trim()) msgs.push('Borrower name is empty.');
+      if (g.assetCost <= 0) msgs.push('Asset cost must be greater than zero.');
+      if (g.marginPct + g.subsidyPct >= 100) msgs.push("Margin % + Subsidy % is ≥ 100% — no loan component remains.");
+      if (fin.loanAmt <= 0 && g.assetCost > 0) msgs.push('Computed loan amount is zero — review margin/subsidy inputs.');
+      if (g.dailyKm <= 0) msgs.push('Daily run (KM) is zero — route viability cannot be assessed.');
+      if (g.tenureMonths <= 0) msgs.push('Tenure must be at least 1 month.');
+      if (g.roiPct === 0) msgs.push('Interest rate is 0% — confirm this is an intended subvention case.');
+
+      const box = document.getElementById('validationWarnings');
+      if (msgs.length === 0) {
+        box.style.display = 'none';
+        box.innerHTML = '';
+      } else {
+        box.style.display = 'block';
+        box.innerHTML = '⚠ ' + msgs.join('&nbsp;&nbsp;·&nbsp;&nbsp;⚠ ');
+      }
+
+      document.getElementById('borrowerName').classList.toggle('input-error', !document.getElementById('borrowerName').value.trim());
+      document.getElementById('assetCost').classList.toggle('input-error', g.assetCost <= 0);
+    }
+
+    // ---------------------------------------------------------------------
+    // THE "SUPER PROMPT" GENERATOR
+    // ---------------------------------------------------------------------
+    function generateStructuredPrompt(g, fin, risk) {
+      const cibilDisplay = risk.cibilScore !== null
+        ? `${risk.cibilScore} (parsed from entry: "${g.cibilSummary}")`
+        : `Not machine-parsed — raw entry: "${g.cibilSummary}"`;
+
+      const vehicleAgeLine = g.vehicleCondition === 'Used'
+        ? `Used vehicle, approx. ${g.vehicleAgeYears} year(s) old`
+        : 'New vehicle (ex-showroom)';
+
+      const driverLine = g.ownerDriven === 'Hired Driver'
+        ? `Hired driver/crew, wage provision ₹${g.driverWage}/month`
+        : `Owner-driven (owner/proprietor is the primary driver)`;
+
+      return `Act as a Senior Bank Credit Appraiser, SME/SRTO Underwriter, and Credit Risk Analyst specializing in Micro & Small Enterprises (MSE) and SRTO (Small Road Transport Operator) financing under Indian government-sponsored schemes (MUDRA, PMEGP, NEEDS, CGTMSE/CGFMU).
+
+I am appraising a term loan proposal for a micro-enterprise commercial vehicle purchase. You have (or may have) access to real-time web search. Use it wherever this prompt asks you to verify or enrich a figure, and clearly cite what you find. Produce an exhaustive techno-economic viability assessment, operational benchmark breakdown, 5-year financial statement projection, a formal risk-scoring matrix, an explicit credit decision recommendation, and a set of citation-backed justification snippets ready for CAF/board use.
+
+---
+### CASE INPUT VARIABLES
+
+**Applicant Profile**
+- Borrower Name & Constitution: ${g.borrowerName} / ${g.constitution}
+- Age: ${g.applicantAge} years | Dependents: ${g.dependents}
+- Co-Applicant / Guarantor: ${g.coApplicant}
+- Operating Location / District & State: ${g.location}
+- Banking Relationship: ${g.bankVintage}
+- Credit Information / CIBIL Score: ${cibilDisplay}
+
+**Existing Obligations & Other Income**
+- Existing EMI Obligations (other loans, ₹/month): ${formatCurrency(g.existingEmi)}
+- Other Household/Business Income (₹/month): ${formatCurrency(g.otherIncome)}
+- Existing Fleet Size Already Owned: ${g.existingVehicles} vehicle(s)
+
+**Asset & Financing**
+- Proposed Asset / Vehicle Model: ${g.assetModel} (${vehicleAgeLine})
+- Dealer Quotation / On-Road Cost: ${formatCurrency(fin.assetCost)} (Dealer: ${g.dealerInfo})
+- Business Model / Route Nature: ${g.businessModel}
+- Target Scheme: ${g.schemeName}
+- Borrower Margin Contribution: ${fin.marginPct.toFixed(2)}% (${formatCurrency(fin.marginAmt)})
+- Expected Government Subsidy: ${fin.subsidyPct.toFixed(2)}% (${formatCurrency(fin.subsidyAmt)})
+- Proposed Bank Term Loan Quantum: ${formatCurrency(fin.loanAmt)}
+- Interest Rate & Repayment Tenure: ${fin.roi.toFixed(2)}% p.a., ${fin.tenure} months with ${g.moratMonths} month(s) moratorium
+- Additional Collateral / Security Offered: ${formatCurrency(g.collateralValue)}
+
+**Operational Assumptions**
+- Estimated Base Run: ${g.dailyKm} KM/day over ${g.opDays} days/month
+- Realistic loaded mileage: ${g.mileageKmpl} KM/L | Diesel price: ₹${g.fuelPrice}/L
+- Base Freight Tariff: ₹${g.freightTariff}/KM | Monthly Maintenance provision: ${formatCurrency(g.monthlyMaint)}
+- Driving Arrangement: ${driverLine}
+
+**Indicative Pre-Screening Snapshot (auto-calculated by this tool — treat as a starting hypothesis to test, NOT a finding)**
+- Indicative DSCR (Year-1, simplified): ${risk.dscrInd === null ? 'N/A' : risk.dscrInd.toFixed(2) + 'x'}
+- Loan-to-Cost: ${risk.ltcPct.toFixed(1)}% | Obligation-to-Gross-Inflow: ${risk.dbrPct.toFixed(1)}%
+- Collateral Cover on Loan: ${risk.collateralCoverPct.toFixed(1)}%
+- Indicative Risk Score: ${risk.pts}/9 (${risk.band})
+---
+
+### SECTION 0: MANDATORY WEB RESEARCH & DATA VERIFICATION DIRECTIVE
+Before finalizing your assessment, use web search (if available in this session) to verify and enrich the following figures. For each item, produce a short "Justification Snippet" (2-3 sentences) that states whether it corroborates, contradicts, or could not verify the user-supplied figure, and cite the source by name (and URL if you have one). If real-time browsing is NOT available to you in this session, say so plainly for each item and label it "UNVERIFIED — recommend manual check before sanction" instead of inventing a source or figure.
+1. Prevailing bank lending rate band (RBI repo-linked/MCLR-linked) for vehicle/MSE loans — is ${fin.roi.toFixed(2)}% p.a. market-aligned?
+2. Current retail diesel price in or near ${g.location} — cross-check against the user-supplied ₹${g.fuelPrice}/L.
+3. Realistic resale/depreciation benchmark for ${g.assetModel} in the secondary market — use this to sanity-check the residual/collateral value implied by Section 4's depreciation schedule.
+4. Latest official guidelines/circular for the "${g.schemeName}" scheme (margin %, subsidy cap, eligibility criteria) from the scheme's official government portal (e.g., pmegp.gov.in, kviconline.gov.in, standupmitra.in, jansamarth.in, cgtmse.in, or the relevant state transport/industries department) — flag any mismatch with the user-entered ${fin.marginPct.toFixed(1)}% margin / ${fin.subsidyPct.toFixed(1)}% subsidy.
+5. Any recent (last 12 months) commentary on freight demand, diesel price trend, or SRTO sector conditions relevant to ${g.businessModel} in ${g.location}.
+Present all monetary figures in ₹ with standard Indian lakh/crore formatting. Never fabricate a specific citation URL — if unsure of the exact source, describe the type of source (e.g., "RBI website", "state fuel price bulletin") rather than inventing a fake link.
+
+#### SECTION 1: VEHICLE SPECIFICATIONS & ROUTE VIABILITY (BACK-OF-THE-ENVELOPE PREMISES)
+1. Technical asset baseline:
+   - Engine displacement, payload capacity (GVW / Net payload in kg), certified vs. realistic loaded commercial mileage (KM/Litre) for ${g.assetModel}. ${g.vehicleCondition === 'Used' ? `Since this is a used vehicle (~${g.vehicleAgeYears} yrs old), also flag expected mileage/reliability degradation vs. a new unit.` : ''}
+   - Expected commercial economic life (years/total km) and tyre replacement cycle (every X kms).
+2. Operational run benchmarks across 3 distinct scenarios:
+   - Conservative / Lean Scenario (Intra-city short-haul, local mandi / market runs)
+   - Realistic / Base Scenario (Calibrated around ${g.dailyKm} KM/day, ${g.opDays} days/month: ${g.businessModel})
+   - Aggressive / Peak Scenario (Inter-district express runs / dedicated logistics contracts)
+   For each scenario, specify: Daily Run (KM), Operating Days/Month, Monthly Distance (KM), Realistic Tariff/Freight realization rate (₹/KM or flat rate per trip), and Gross Monthly Operating Inflow.
+
+#### SECTION 2: OPERATIONAL EXPENDITURE BREAKDOWN (BASE CASE)
+Provide an itemized monthly and per-KM unit cost analysis for the Base Scenario:
+1. Fuel Cost: Monthly KM ÷ Real-world Mileage (${g.mileageKmpl} KM/L) × Current regional diesel price (₹${g.fuelPrice}/L, cross-verified in Section 0). Show fuel cost per KM.
+2. Driver / Operator Expenses: ${driverLine}. Specify whether this is owner-driven (opportunity cost of labour) or a hired crew (hard cash cost), and how that changes net surplus available to the household.
+3. Routine Maintenance & Periodic Servicing: Oil change schedules, periodic filters, suspension upkeep, and tyre wear provision based on ${formatCurrency(g.monthlyMaint)}/month budget.
+4. Statutory & Fixed Overheads: Commercial comprehensive insurance amortization, state fitness certificate/taxes, toll charges, and emergency maintenance contingency.
+5. Net Monthly Operating Surplus before Debt Service (Gross Inflow minus Total Operating Expenses).
+
+#### SECTION 3: PROJECT OUTLAY, FINANCING & STATUTORY GUARANTEE ROUTING
+1. Means of Finance table:
+   - On-road cost of asset (${formatCurrency(fin.assetCost)}).
+   - Promoter Margin (${fin.marginPct.toFixed(2)}% = ${formatCurrency(fin.marginAmt)}).
+   - Back-ended Govt Subsidy (${fin.subsidyPct.toFixed(2)}% = ${formatCurrency(fin.subsidyAmt)}).
+   - Net Term Loan recommended (${formatCurrency(fin.loanAmt)}).
+2. Statutory Guarantee Coverage determination:
+   - Evaluated under the statutory threshold: ${fin.loanAmt <= 0 ? 'No loan component computed — guarantee routing not applicable; re-check margin/subsidy inputs.' : (fin.loanAmt <= 1000000 ? 'Loan <= ₹10.00 Lakhs, mandatory routing under CGFMU (Credit Guarantee Fund for Micro Units) with standard upfront guarantee fee of 1.00%.' : 'Loan > ₹10.00 Lakhs, mandatory routing under CGTMSE (Credit Guarantee Fund Trust for Micro and Small Enterprises) with 1.35% + GST fee structure.')}
+   - Specify the exact fee payable (${formatCurrency(fin.feeAmt)}) and coverage parameters for the bank.
+   - Note any additional collateral/security offered (${formatCurrency(g.collateralValue)}, ${risk.collateralCoverPct.toFixed(1)}% of loan) and how it interacts with guarantee-scheme collateral-free norms.
+
+#### SECTION 4: 5-YEAR WDV DEPRECIATION SCHEDULE
+Build a full 5-year depreciation table following the Income Tax Act rules for commercial goods/transport vehicles (30% Written Down Value), starting from an opening block that reflects the asset's actual condition (${vehicleAgeLine}):
+- Columns: Financial Year (FY1 to FY5) | Opening Asset Block (₹) | Depreciation Rate (30%) | Annual Depreciation Amount (₹) | Closing Asset Value (₹).
+- State the total cumulative tax depreciation claimed and the estimated residual salvage value at Year 5, cross-checked against the resale benchmark you found in Section 0.
+
+#### SECTION 5: 3-COMPONENT FINANCIAL STATEMENTS & DEBT SERVICING (5-YEAR PROJECTION)
+Provide an annual 5-year tabular financial projection incorporating 4% annual freight tariff escalation and 4% operating cost escalation:
+1. Part I: Profit & Loss Statement (Gross Turnover, Direct Operational Costs, EBITDA, Depreciation @ 30% WDV, Bank Term Loan Interest, Profit Before Tax, Presumptive Tax / Micro Tax Provision, Net Profit After Tax).
+2. Part II: Cash Flow & Debt Servicing (Gross Cash Accruals [PAT + Depreciation], Scheduled Principal Repayment, Annual Interest, Total Debt Service Obligation [P + I], DSCR Ratio for each year, and Average DSCR over loan tenure). Treat the tool's Indicative DSCR of ${risk.dscrInd === null ? 'N/A' : risk.dscrInd.toFixed(2) + 'x'} as a rough starting hypothesis only — recompute properly from your own P&L and cash flow build.
+3. Part III: Balance Sheet Core Position (Closing Bank Term Loan Liability, Cumulative Net Worth / Proprietor Capital).
+Confirm explicitly whether the Projected Average DSCR meets the mandatory commercial banking benchmark (DSCR >= 1.50x).
+
+#### SECTION 6: FORMAL APPRAISAL JUSTIFICATION NOTE (BANK CAF / SANCTION MEMO FORMAT)
+Generate 3 detailed, professional paragraphs formatted for direct insertion into an official Bank Credit Proposal / Common Appraisal Format (CAF):
+1. About the Borrower & Professional Track Record (Local market standing in ${g.location}, driving credentials, domain experience, existing fleet of ${g.existingVehicles} vehicle(s) if any, client tie-ups with mandis/dealers).
+2. Statutory Due Diligence & CIBIL Assessment (CIBIL score/entry: ${cibilDisplay}; banking relationship: ${g.bankVintage}; credit history verification, CERSAI, and AML compliance clearance).
+3. Justification for Proposal & Commercial Viability (Economic justification for migrating to the proposed ${g.assetModel}, income sustainability, comfortable debt service coverage, and clear sanction recommendation).
+
+#### SECTION 7: CONSOLIDATED REPAYMENT CAPACITY (BUSINESS + HOUSEHOLD)
+Beyond the business DSCR in Section 5, assess overall repayment capacity considering:
+- Existing EMI obligations of ${formatCurrency(g.existingEmi)}/month from other loans, alongside the new EMI of ${formatCurrency(fin.emi)}/month.
+- Other household/business income of ${formatCurrency(g.otherIncome)}/month, ${g.dependents} dependent(s), co-applicant/guarantor: ${g.coApplicant}.
+- Whether the combined obligation load is sustainable even in a stress scenario (e.g., 15% drop in freight volume or a fuel price spike), and what cushion the ${formatCurrency(g.otherIncome)}/month other income provides.
+State a clear view: comfortable / adequate but tight / stretched, with reasoning.
+
+#### SECTION 8: FIVE-C CREDIT RISK SCORING MATRIX
+Score the proposal on each of the 5 Cs of credit on a 1–5 scale, with one line of rationale for each, then a weighted total and a risk grade (e.g., A/Low, B/Medium, C/High, D/Decline):
+- **Character**: CIBIL/track record, banking relationship (${g.bankVintage}), repayment discipline.
+- **Capacity**: DSCR from Section 5, consolidated repayment capacity from Section 7.
+- **Capital**: Promoter margin contribution (${fin.marginPct.toFixed(1)}%), existing net worth/fleet ownership.
+- **Collateral**: Asset hypothecation plus additional security of ${formatCurrency(g.collateralValue)} (${risk.collateralCoverPct.toFixed(1)}% of loan).
+- **Conditions**: Route/sector outlook and macro conditions as verified in Section 0 (fuel price trend, freight demand, scheme guideline stability).
+Present as a table, then state the overall weighted score and grade explicitly. Treat the tool's own indicative score (${risk.pts}/9, banded ${risk.band}) as a rough starting hypothesis only, not a substitute for this formal matrix.
+
+#### SECTION 9: FINAL CREDIT DECISION & RECOMMENDATION
+Provide an explicit recommendation, choosing ONE of: **APPROVE** / **APPROVE WITH CONDITIONS** / **REFER TO HIGHER SANCTIONING AUTHORITY** / **DECLINE**. Support it with:
+- 3-5 bullet-pointed key reasons drawing on Sections 1-8.
+- Suggested sanction conditions/covenants if approved (e.g., hypothecation of the vehicle, comprehensive insurance assignment, EMI auto-debit mandate, periodic trip-log/odometer submission, minimum balance requirements).
+- Post-disbursement monitoring triggers (e.g., DSCR review frequency, early-warning signals such as EMI bounces or trip-log gaps).
+- A closing compliance line, verbatim or near-verbatim: "This is a decision-support recommendation for the sanctioning authority's consideration; it does not constitute an automated or final credit sanction. Final approval rests with the Bank's competent authority under its delegated lending powers, subject to RBI's Fair Practices Code, KYC/AML norms, and the Bank's credit policy."
+
+#### SECTION 10: JUSTIFICATION SNIPPET LIBRARY (FOR CAF / BOARD NOTE / CUSTOMER COMMUNICATION)
+Produce 4 short, ready-to-paste snippets (2-4 lines each). Each snippet must end with a bracketed source tag — either a citation from your Section 0 research, or "[Based on borrower-submitted data, unverified]" where no external source applies. Never present an unverified figure as a confirmed fact:
+1. **Scheme Eligibility Justification** — one paragraph for the CAF's scheme-compliance column.
+2. **Commercial Viability Justification** — one paragraph for the CAF's remarks column, referencing the DSCR and route economics.
+3. **Risk Mitigation Justification** — one paragraph explaining the collateral/guarantee/conditions that mitigate the identified risk grade.
+4. **Plain-Language Customer Explanation** — 2-3 sentences a relationship manager could read out to the borrower explaining the decision and any conditions, in simple, non-technical language.`;
+    }
+
+    // ---------------------------------------------------------------------
+    // ORCHESTRATION
+    // ---------------------------------------------------------------------
+    function updateAll() {
+      try {
+        const g = gatherInputs();
+        const fin = calculateFinance(g);
+        const risk = computeRiskSnapshot(g, fin);
+        updateMetricsDisplay(fin, risk);
+        renderWarnings(g, fin);
+        const promptText = generateStructuredPrompt(g, fin, risk);
+        document.getElementById('promptOutput').value = promptText;
+        const words = promptText.split(/\s+/).filter(Boolean).length;
+        document.getElementById('promptWordCount').textContent = `~${words.toLocaleString('en-IN')} words`;
+      } catch (err) {
+        console.error('updateAll failed:', err);
+        showToast('Something went wrong updating the prompt — see console for details.');
+      }
+    }
+
+    function onSchemeSelect() {
+      const scheme = document.getElementById('schemeName').value;
+      if (scheme === 'PMEGP' || scheme === 'NEEDS (Tamil Nadu)') {
+        document.getElementById('marginPct').value = "10.0";
+        document.getElementById('subsidyPct').value = "25.0";
+      } else if (scheme === 'Plain MUDRA (Tarun)') {
+        document.getElementById('marginPct').value = "15.0";
+        document.getElementById('subsidyPct').value = "0.0";
+      } else if (scheme === 'Stand-Up India') {
+        document.getElementById('marginPct').value = "15.0";
+        document.getElementById('subsidyPct').value = "15.0";
+      } else { // Commercial CGTMSE
+        document.getElementById('marginPct').value = "20.0";
+        document.getElementById('subsidyPct').value = "0.0";
+      }
+      updateAll();
+    }
+
+    function setVal(id, v) {
+      const el = document.getElementById(id);
+      if (el) el.value = v;
+    }
+
+    function applyPreset(type) {
+      if (type === 'maxx_pmegep') {
+        setVal('borrowerName', "K. Muruganandam");
+        setVal('constitution', "Sole Proprietorship");
+        setVal('assetModel', "Mahindra Bolero Maxx Pik-Up HD 2.0L");
+        setVal('assetCost', "950000");
+        setVal('dealerInfo', "M/s Ramani Mahindra, Trichy");
+        setVal('schemeName', "PMEGP");
+        setVal('marginPct', "10.0");
+        setVal('subsidyPct', "25.0");
+        setVal('roiPct', "9.50");
+        setVal('tenureMonths', "60");
+        setVal('moratMonths', "3");
+        setVal('dailyKm', "150");
+        setVal('mileageKmpl', "12.5");
+        setVal('freightTariff', "24.0");
+        setVal('businessModel', "Semi-urban agricultural produce & wholesale FMCG distribution");
+        setVal('applicantAge', "38");
+        setVal('dependents', "3");
+        setVal('coApplicant', "None");
+        setVal('existingEmi', "0");
+        setVal('otherIncome', "8000");
+        setVal('bankVintage', "SB a/c 5 yrs with bank, no adverse remarks");
+        setVal('vehicleCondition', "New");
+        setVal('vehicleAgeYears', "0");
+        setVal('collateralValue', "0");
+        setVal('existingVehicles', "0");
+        setVal('ownerDriven', "Owner-Driven");
+        setVal('driverWage', "0");
+        setVal('location', "Tiruchirappalli District, Tamil Nadu");
+        setVal('cibilSummary', "754 score, clean repayment track, nil overdues");
+      } else if (type === 'tata_mudra') {
+        setVal('borrowerName', "S. Radhakrishnan");
+        setVal('constitution', "Individual");
+        setVal('assetModel', "Tata Ace Gold Petrol CX");
+        setVal('assetCost', "520000");
+        setVal('dealerInfo', "M/s V.S.T. Motors, Chennai Road, Trichy");
+        setVal('schemeName', "Plain MUDRA (Tarun)");
+        setVal('marginPct', "15.0");
+        setVal('subsidyPct', "0.0");
+        setVal('roiPct', "9.75");
+        setVal('tenureMonths', "48");
+        setVal('moratMonths', "2");
+        setVal('dailyKm', "90");
+        setVal('mileageKmpl', "16.0");
+        setVal('freightTariff', "22.0");
+        setVal('businessModel', "Intra-city dairy distribution & local retail provision supply");
+        setVal('applicantAge', "29");
+        setVal('dependents', "2");
+        setVal('coApplicant', "Spouse — homemaker");
+        setVal('existingEmi', "1500");
+        setVal('otherIncome', "5000");
+        setVal('bankVintage', "SB a/c 3 yrs, nil overdues");
+        setVal('vehicleCondition', "New");
+        setVal('vehicleAgeYears', "0");
+        setVal('collateralValue', "0");
+        setVal('existingVehicles', "0");
+        setVal('ownerDriven', "Owner-Driven");
+        setVal('driverWage', "0");
+        setVal('location', "Tiruchirappalli District, Tamil Nadu");
+        setVal('cibilSummary', "718 score, one restructured personal loan closed 2 yrs ago");
+      } else if (type === 'passenger_cab') {
+        setVal('borrowerName', "Abdul Kather Abdul Raffik");
+        setVal('constitution', "Sole Proprietorship");
+        setVal('assetModel', "Kia Carens Clavis G 1.5 6MT (Taxi Badge)");
+        setVal('assetCost', "1425000");
+        setVal('dealerInfo', "M/s Ramani Auto Pvt Ltd, Dindigul Road, Trichy");
+        setVal('schemeName', "NEEDS (Tamil Nadu)");
+        setVal('marginPct', "10.0");
+        setVal('subsidyPct', "25.0");
+        setVal('roiPct', "8.65");
+        setVal('tenureMonths', "84");
+        setVal('moratMonths', "3");
+        setVal('dailyKm', "180");
+        setVal('mileageKmpl', "14.0");
+        setVal('freightTariff', "26.0");
+        setVal('businessModel', "Pilgrimage tourism & inter-district hotel guest shuttle service");
+        setVal('applicantAge', "45");
+        setVal('dependents', "4");
+        setVal('coApplicant', "Son — salaried, co-borrower");
+        setVal('existingEmi', "3200");
+        setVal('otherIncome', "15000");
+        setVal('bankVintage', "Current a/c 8 yrs, satisfactory conduct");
+        setVal('vehicleCondition', "New");
+        setVal('vehicleAgeYears', "0");
+        setVal('collateralValue', "200000");
+        setVal('existingVehicles', "1");
+        setVal('ownerDriven', "Hired Driver");
+        setVal('driverWage', "14000");
+        setVal('location', "Dindigul District, Tamil Nadu");
+        setVal('cibilSummary', "781 score, excellent repayment track across 2 prior vehicle loans");
+      } else if (type === 'inter_district') {
+        setVal('borrowerName', "Vetri Logistics & Warehousing");
+        setVal('constitution', "Partnership Firm");
+        setVal('assetModel', "Eicher Pro 2049 3.5T Commercial Carrier");
+        setVal('assetCost', "1650000");
+        setVal('dealerInfo', "M/s Jayaraj Trucks, Pudukkottai Ring Road");
+        setVal('schemeName', "Commercial CGTMSE");
+        setVal('marginPct', "20.0");
+        setVal('subsidyPct', "0.0");
+        setVal('roiPct', "9.25");
+        setVal('tenureMonths', "60");
+        setVal('moratMonths', "3");
+        setVal('dailyKm', "240");
+        setVal('mileageKmpl', "9.5");
+        setVal('freightTariff', "32.0");
+        setVal('businessModel', "Inter-district express parcel delivery & pharma cold-chain feeder");
+        setVal('applicantAge', "42");
+        setVal('dependents', "0");
+        setVal('coApplicant', "Partnership — 2 partners, joint & several liability");
+        setVal('existingEmi', "9500");
+        setVal('otherIncome', "0");
+        setVal('bankVintage', "CC a/c 6 yrs with consortium bank");
+        setVal('vehicleCondition', "New");
+        setVal('vehicleAgeYears', "0");
+        setVal('collateralValue', "500000");
+        setVal('existingVehicles', "3");
+        setVal('ownerDriven', "Hired Driver");
+        setVal('driverWage', "18000");
+        setVal('location', "Pudukkottai District, Tamil Nadu");
+        setVal('cibilSummary', "Firm CIBIL rank 2, partners' personal scores 720 & 695, no defaults");
+      }
+      updateAll();
+      showToast("Applied preset configuration!");
+    }
+
+    function resetDefaults() {
+      applyPreset('maxx_pmegep');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastMessage');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    function copyPromptToClipboard() {
+      const text = document.getElementById('promptOutput').value;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast("Prompt copied to clipboard!");
+        }).catch(() => {
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.style.position = 'fixed';
+      area.style.left = '-9999px';
+      document.body.appendChild(area);
+      area.select();
+      try {
+        document.execCommand('copy');
+        showToast("Prompt copied to clipboard!");
+      } catch (e) {
+        showToast("Press Ctrl+C inside the text box to copy.");
+      } finally {
+        document.body.removeChild(area);
+      }
+    }
+
+    function downloadPromptText() {
+      try {
+        const text = document.getElementById('promptOutput').value;
+        const bName = (document.getElementById('borrowerName').value || 'Borrower').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const filename = `Loan_Appraisal_Prompt_${bName}.txt`;
+
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(`Downloaded as ${filename}`);
+      } catch (err) {
+        console.error('downloadPromptText failed:', err);
+        showToast('Could not download the prompt file.');
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // SAVE / LOAD CASE (portable JSON, so officers can reuse or hand off cases)
+    // ---------------------------------------------------------------------
+    function saveCaseJSON() {
+      try {
+        const data = {};
+        ALL_FIELD_IDS.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) data[id] = el.value;
+        });
+        data.__meta = {
+          savedAt: new Date().toISOString(),
+          tool: 'Transport & Micro Industry Loan Prompt Studio',
+          version: 2
+        };
+        const bName = (document.getElementById('borrowerName').value || 'Borrower').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const filename = `Loan_Case_${bName}.json`;
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(`Case saved as ${filename}`);
+      } catch (err) {
+        console.error('saveCaseJSON failed:', err);
+        showToast('Could not save the case file.');
+      }
+    }
+
+    function triggerLoadCase() {
+      document.getElementById('loadCaseInput').click();
+    }
+
+    function loadCaseFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          ALL_FIELD_IDS.forEach(id => {
+            if (data[id] !== undefined) {
+              const el = document.getElementById(id);
+              if (el) el.value = data[id];
+            }
+          });
+          updateAll();
+          showToast('Case loaded successfully.');
+        } catch (err) {
+          console.error('loadCaseFile failed:', err);
+          showToast('Invalid or corrupted case file.');
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.onerror = () => showToast('Could not read the selected file.');
+      reader.readAsText(file);
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      updateAll();
+    });
+  </script>
+</body>
+</html>
