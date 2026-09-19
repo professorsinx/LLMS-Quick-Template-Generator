@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loan Appraisal Prompt &amp; Snippet Studio</title>
+<style>
+  :root {
+    --ink: #0f172a; --ink-soft: #475569; --bg: #f8fafc; --surface: #ffffff;
+    --border: #cbd5e1; --accent: #2563eb; --accent-hover: #1d4ed8;
+    --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    --font: system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
+  body { background: var(--bg); color: var(--ink); padding: 20px; font-size: 14px; line-height: 1.5; }
+  
+  .app-container { max-width: 1480px; margin: 0 auto; display: grid; grid-template-columns: 420px 1fr; gap: 20px; }
+  
+  /* Header & Tools */
+  .header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 15px 20px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .header h1 { font-size: 1.25rem; font-weight: 700; color: var(--ink); }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
+  
+  /* Buttons */
+  .btn { padding: 8px 12px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.15s; }
+  .btn:hover { background: #f1f5f9; }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent-hover); color: white; }
+  .btn-danger { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+  .btn-danger:hover { background: #fecaca; }
+  
+  /* Inputs Panel */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; height: calc(100vh - 100px); overflow-y: auto; }
+  .panel-title { font-size: 1rem; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--bg); position: sticky; top: -20px; background: var(--surface); z-index: 10; }
+  .sec-heading { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; margin: 14px 0 6px; letter-spacing: 0.5px; }
+
+  .form-group { margin-bottom: 10px; }
+  .form-group label { display: block; font-size: 0.72rem; font-weight: 700; color: var(--ink-soft); margin-bottom: 3px; text-transform: uppercase; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; outline: none; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+  /* Output Sections */
+  .output-grid { display: flex; flex-direction: column; gap: 15px; height: calc(100vh - 100px); overflow-y: auto; padding-right: 5px; }
+  .snippet-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 15px; position: relative; }
+  .snippet-card h3 { font-size: 0.9rem; color: var(--accent); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .copy-btn { padding: 4px 8px; font-size: 0.75rem; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; color: var(--ink); }
+  .copy-btn:hover { background: #cbd5e1; }
+  
+  .snippet-content { background: var(--bg); padding: 12px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; border: 1px solid #e2e8f0; }
+  
+  /* Copy Box (EXTRACT_SCRIPT) */
+  .copy-box-wrap { position: relative; }
+  pre.code-box { background: #0f172a; color: #f8fafc; font-family: monospace; font-size: 0.78rem; padding: 12px; border-radius: 6px; overflow-x: auto; max-height: 180px; }
+
+  /* Copyable Table */
+  .copy-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+  .copy-table th, .copy-table td { border: 1px solid var(--border); padding: 8px; text-align: left; }
+  .copy-table th { background: #f1f5f9; font-weight: 700; color: var(--ink-soft); }
+  .copy-table td.copyable-cell { cursor: pointer; transition: background 0.15s; }
+  .copy-table td.copyable-cell:hover { background: #e0f2fe; }
+  .copy-table td.copyable-cell:active { background: #bae6fd; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 100; }
+  .modal { background: var(--surface); width: 600px; padding: 20px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+  .modal h2 { margin-bottom: 10px; font-size: 1.1rem; }
+  .modal textarea { width: 100%; height: 200px; margin-bottom: 15px; font-family: monospace; font-size: 0.85rem; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
+  
+  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: white; padding: 10px 20px; border-radius: 6px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 1000; }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="header">
+    <h1>Loan Prompt &amp; Snippet Studio</h1>
+    <div class="toolbar">
+      <button class="btn btn-danger" onclick="clearAllFields()">🧹 Clear All Fields</button>
+      <button class="btn" onclick="openCbsModal()">📥 Import CBS Data</button>
+      <button class="btn" onclick="exportData()">💾 Export JSON</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">📂 Import JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </div>
+
+  <!-- INPUTS PANEL -->
+  <div class="panel">
+    <div class="panel-title">Proposal Inputs</div>
+    
+    <div class="sec-heading">1. Applicant &amp; Entity Profile</div>
+    <div class="form-group"><label>Applicant Name</label><input type="text" id="i_name" value=""></div>
+    <div class="form-row">
+      <div class="form-group"><label>Constitution</label><input type="text" id="i_const" value=""></div>
+      <div class="form-group"><label>Firm Name</label><input type="text" id="i_firm" value=""></div>
+    </div>
+    
+    <div class="form-row-3">
+      <div class="form-group"><label>Date of Birth</label><input type="text" id="i_dob" placeholder="DD/MM/YYYY" value=""></div>
+      <div class="form-group"><label>Calculated Age</label><input type="text" id="i_age_calc" placeholder="Auto" readonly style="background:#f1f5f9; font-weight:bold;"></div>
+      <div class="form-group"><label>Dependents</label><input type="number" id="i_dependents" placeholder="0" min="0" value=""></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>CIBIL Score</label><input type="text" id="i_cibil" value=""></div>
+      <div class="form-group"><label>CIBIL Control No</label><input type="text" id="i_cibil_ctrl" placeholder="Control Number" value=""></div>
+    </div>
+    <div class="form-group"><label>Full Address / Location</label><input type="text" id="i_address" value=""></div>
+
+    <div class="sec-heading">2. Registration &amp; Credentials</div>
+    <div class="form-row">
+      <div class="form-group"><label>Commencement Date</label><input type="text" id="i_comm_date" placeholder="DD/MM/YYYY" value=""></div>
+      <div class="form-group"><label>Udyam Reg. No</label><input type="text" id="i_udyam" placeholder="UDYAM-XX-XX-XXXXXXX" value=""></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Reg. Certification Date</label><input type="text" id="i_reg_cert_date" placeholder="DD/MM/YYYY" value=""></div>
+      <div class="form-group"><label>Aadhaar No</label><input type="text" id="i_aadhaar" placeholder="XXXX XXXX XXXX" value=""></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>PAN</label><input type="text" id="i_pan" placeholder="ABCDE1234F" value=""></div>
+      <div class="form-group"><label>Driving Licence (DL No)</label><input type="text" id="i_dl" placeholder="DL Number" value=""></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Badge No</label><input type="text" id="i_badge" placeholder="Badge Number" value=""></div>
+      <div class="form-group"><label>DL Valid Upto</label><input type="text" id="i_dl_validity" placeholder="DD/MM/YYYY" value=""></div>
+    </div>
+    <div class="form-group"><label>Experience (Years in Sector)</label><input type="text" id="i_experience" placeholder="e.g. 10" value=""></div>
+
+    <div class="sec-heading">3. Contact &amp; Detailed Address Components</div>
+    <div class="form-row">
+      <div class="form-group"><label>Door / Flat No.</label><input type="text" id="i_door" placeholder="Door/Flat No."></div>
+      <div class="form-group"><label>Street / Road</label><input type="text" id="i_street" placeholder="Street / Road"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Locality / Village</label><input type="text" id="i_locality" placeholder="Locality / Village"></div>
+      <div class="form-group"><label>District</label><input type="text" id="i_dist" placeholder="District"></div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group"><label>Post Code</label><input type="text" id="i_postcode" placeholder="PIN Code"></div>
+      <div class="form-group"><label>State</label><input type="text" id="i_state" placeholder="State"></div>
+      <div class="form-group"><label>Mobile</label><input type="text" id="i_mobile" placeholder="Mobile Number"></div>
+    </div>
+    <div class="form-group"><label>Email</label><input type="text" id="i_email" placeholder="Email Address" value=""></div>
+
+    <div class="sec-heading">4. Facility &amp; Means of Finance</div>
+    <div class="form-row">
+      <div class="form-group"><label>Loan Amount (₹)</label><input type="number" id="i_loan" value=""></div>
+      <div class="form-group"><label>ROI (% p.a.)</label><input type="number" step="0.05" id="i_roi" value=""></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Scheme</label>
+        <select id="i_scheme">
+          <option value="">— Select Scheme —</option>
+          <option>PMMY Sishu</option>
+          <option>PMMY Kishore</option>
+          <option>PMMY Tarun</option>
+          <option>PMMY Tarun Plus</option>
+          <option>Stand-Up India</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Guarantee</label>
+        <select id="i_guar">
+          <option value="">— Select Guarantee —</option>
+          <option>CGFMU</option>
+          <option>CGTMSE</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Subsidy Scheme</label>
+        <select id="i_sub_scheme">
+          <option value="">— Select Subsidy —</option>
+          <option>AABCS</option>
+          <option>CM-ARISE</option>
+          <option>NEEDS</option>
+          <option>PMEGP</option>
+          <option>UYEGP</option>
+          <option>Plain MUDRA</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Subsidy Amount (₹)</label><input type="number" id="i_sub_amt" value=""></div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group"><label>Borrower Margin (₹)</label><input type="number" id="i_margin_amt" value=""></div>
+      <div class="form-group"><label>Tenor / Morat (M)</label><input type="text" id="i_tenor" placeholder="84 / 3" value=""></div>
+    </div>
+
+    <div class="sec-heading">5. Asset Details &amp; Operational Benchmarks</div>
+    <div class="form-group"><label>Asset Details</label><input type="text" id="i_asset" value=""></div>
+    <div class="form-row">
+      <div class="form-group"><label>Asset Cost (₹)</label><input type="number" id="i_cost" value=""></div>
+      <div class="form-group"><label>Dealer</label><input type="text" id="i_dealer" value=""></div>
+    </div>
+
+    <div class="form-group"><label>Business/Route Nature</label><input type="text" id="i_route" value=""></div>
+    
+    <!-- Grouped 3 Boxes: Operations & Freight Realization -->
+    <div style="background:#f1f5f9; padding:8px; border-radius:6px; margin-bottom:10px; border:1px solid var(--border);">
+      <div style="font-size:0.7rem; font-weight:800; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase;">Operations &amp; Freight Realization</div>
+      <div class="form-row-3">
+        <div class="form-group" style="margin-bottom:0;"><label>Daily Run (KM)</label><input type="number" id="i_daily_km" value=""></div>
+        <div class="form-group" style="margin-bottom:0;"><label>Days / Month</label><input type="number" id="i_op_days" value=""></div>
+        <div class="form-group" style="margin-bottom:0;"><label>Tariff (₹/KM)</label><input type="number" id="i_tariff" value=""></div>
+      </div>
+    </div>
+
+    <!-- Grouped 2 Boxes: Fuel Parameters -->
+    <div style="background:#f1f5f9; padding:8px; border-radius:6px; margin-bottom:10px; border:1px solid var(--border);">
+      <div style="font-size:0.7rem; font-weight:800; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase;">Fuel Parameters</div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0;"><label>Mileage (KM/L or KM/KG)</label><input type="number" step="0.5" id="i_mileage" value=""></div>
+        <div class="form-group" style="margin-bottom:0;"><label>Fuel Price (₹/Unit)</label><input type="number" step="0.5" id="i_fuel_price" value=""></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- OUTPUTS PANEL -->
+  <div class="output-grid">
+
+    <!-- CBS SCRIPT COPY BOX -->
+    <div class="snippet-card" style="border-left: 4px solid var(--accent);">
+      <h3>CBS Console Extractor Script (const EXTRACT_SCRIPT) <button class="copy-btn" onclick="copyExtractorScript(this)">📋 Copy Script</button></h3>
+      <div class="copy-box-wrap">
+        <pre class="code-box" id="extractScriptBlock"></pre>
+      </div>
+    </div>
+    
+    <!-- SECTION A -->
+    <div class="snippet-card">
+      <h3>Section (A): Scheme &amp; Term Formulation <button class="copy-btn" onclick="copyId('out_a', this)">📋 Copy</button></h3>
+      <div class="snippet-content" id="out_a"></div>
+    </div>
+
+    <!-- SECTION B -->
+    <div class="snippet-card">
+      <h3>Section (B): Net Means Table <span style="font-size:0.75rem; font-weight:normal; color:var(--ink-soft);">(Click any cell to copy)</span></h3>
+      <table class="copy-table">
+        <tbody>
+          <tr><td class="copyable-cell" onclick="copyCell(this)">Upto Rs.1.00 lac</td><td class="copyable-cell" onclick="copyCell(this)">Very small means</td></tr>
+          <tr><td class="copyable-cell" onclick="copyCell(this)">Above Rs.1.00 lac to Rs.4.00 lacs</td><td class="copyable-cell" onclick="copyCell(this)">Small means</td></tr>
+          <tr><td class="copyable-cell" onclick="copyCell(this)">Above Rs.4.00 lacs to Rs.10.00 lacs</td><td class="copyable-cell" onclick="copyCell(this)">Moderate means</td></tr>
+          <tr><td class="copyable-cell" onclick="copyCell(this)">Above Rs.10.00 lacs to Rs.25.00 lacs</td><td class="copyable-cell" onclick="copyCell(this)">Fair means</td></tr>
+          <tr><td class="copyable-cell" onclick="copyCell(this)">Above Rs.25.00 lacs to Rs.1.00 crore</td><td class="copyable-cell" onclick="copyCell(this)">Good means</td></tr>
+          <tr><td class="copyable-cell" onclick="copyCell(this)">Above Rs.1.00 crore to Rs.10.00 crores</td><td class="copyable-cell" onclick="copyCell(this)">Very good means</td></tr>
+          <tr><td class="copyable-cell" onclick="copyCell(this)">Above Rs.10.00 crore to Rs.25.00 crores</td><td class="copyable-cell" onclick="copyCell(this)">Large means</td></tr>
+          <tr><td class="copyable-cell" onclick="copyCell(this)">Above Rs.25.00 crores</td><td class="copyable-cell" onclick="copyCell(this)">Very large means</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION C & E & G -->
+    <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+      <div class="snippet-card">
+        <h3>Section (C): Margin &amp; Subsidy <button class="copy-btn" onclick="copyId('out_c', this)">📋 Copy</button></h3>
+        <div class="snippet-content" id="out_c"></div>
+      </div>
+      <div class="snippet-card">
+        <h3>Section (E/G): Upfront Fee / STP <button class="copy-btn" onclick="copyId('out_eg', this)">📋 Copy</button></h3>
+        <div class="snippet-content" id="out_eg"></div>
+      </div>
+    </div>
+
+    <!-- SECTION D -->
+    <div class="snippet-card">
+      <h3>Section (D): Inspection Stipulation <button class="copy-btn" onclick="copyId('out_d', this)">📋 Copy</button></h3>
+      <div class="snippet-content" id="out_d">Inspection is stipulated at half yearly intervals. SMECC/RASMECC/RACC will do the Post disbursement inspection of the unit within 1 month and thereafter, at half yearly intervals. During inspection, SMECC/RASMECC/RACC will obtain Utilization certificate from the customer. - "STANDARD OPERATING PROCEDURE ON PRADHAN MANTRI MUDRA YOJANA(PMMY)" Dt. 23.08.2023</div>
+    </div>
+
+    <!-- SECTION F -->
+    <div class="snippet-card">
+      <h3>Section (F): Borrower Profile Text <button class="copy-btn" onclick="copyId('out_f', this)">📋 Copy</button></h3>
+      <div class="snippet-content" id="out_f"></div>
+    </div>
+
+    <!-- SECTION J: VALIDITY OF SANCTION COMMENT -->
+    <div class="snippet-card">
+      <h3>Section (J): Validity of Sanction Comment <button class="copy-btn" onclick="copyId('out_j', this)">📋 Copy All</button></h3>
+      <div class="snippet-content" id="out_j">REVIEW / RENEWAL:
+<span style="display:inline-flex; align-items:center; gap:6px; background:#e2e8f0; padding:2px 6px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="copyText('6 months', this)" title="Click to copy '6 months'">6 months 📋</span>
+
+Cash Credit :- Limit to be renewed every year.
+
+Drop-line Over Draft :- Limit to be reviewed every year.
+
+TL :- To be reviewed annually.</div>
+    </div>
+
+    <!-- SECTION K: QUICK COPY LOAN ATTRIBUTES TABLE -->
+    <div class="snippet-card">
+      <h3>Section (K): Quick Copy Loan Attributes <span style="font-size:0.75rem; font-weight:normal; color:var(--ink-soft);">(Click any cell to copy value)</span></h3>
+      <table class="copy-table">
+        <thead>
+          <tr><th style="width:38%;">Attribute</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>PAN</td><td class="copyable-cell" id="td_pan" onclick="copyCell(this)">-</td></tr>
+          <tr><td>Aadhaar</td><td class="copyable-cell" id="td_aadhaar" onclick="copyCell(this)">-</td></tr>
+          <tr><td>Date of Birth</td><td class="copyable-cell" id="td_dob" onclick="copyCell(this)">-</td></tr>
+          <tr><td>Age</td><td class="copyable-cell" id="td_age" onclick="copyCell(this)">-</td></tr>
+          <tr><td>Dependents</td><td class="copyable-cell" id="td_dependents" onclick="copyCell(this)">-</td></tr>
+          <tr><td>Registration Certification Number</td><td class="copyable-cell" id="td_udyam" onclick="copyCell(this)">-</td></tr>
+          <tr><td>Registration Certification Date</td><td class="copyable-cell" id="td_reg_date" onclick="copyCell(this)">-</td></tr>
+          <tr>
+            <td colspan="2" style="background:#f8fafc; font-weight:bold; color:var(--accent); padding:6px 8px;">Sub-table: Address (Imported / Form Details)</td>
+          </tr>
+          <tr><td style="padding-left:18px;">Door/ Flat No./ Building/ Society</td><td class="copyable-cell" id="td_door" onclick="copyCell(this)">-</td></tr>
+          <tr><td style="padding-left:18px;">Street / Road Name / Block</td><td class="copyable-cell" id="td_street" onclick="copyCell(this)">-</td></tr>
+          <tr><td style="padding-left:18px;">Locality / Village / Tehsil</td><td class="copyable-cell" id="td_locality" onclick="copyCell(this)">-</td></tr>
+          <tr><td style="padding-left:18px;">District</td><td class="copyable-cell" id="td_dist" onclick="copyCell(this)">-</td></tr>
+          <tr><td style="padding-left:18px;">Post Code</td><td class="copyable-cell" id="td_postcode" onclick="copyCell(this)">-</td></tr>
+          <tr><td style="padding-left:18px;">State</td><td class="copyable-cell" id="td_state" onclick="copyCell(this)">-</td></tr>
+          <tr><td style="padding-left:18px;">Mobile Number</td><td class="copyable-cell" id="td_mobile" onclick="copyCell(this)">-</td></tr>
+          <tr><td style="padding-left:18px;">Email</td><td class="copyable-cell" id="td_email" onclick="copyCell(this)">-</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION L: PLANT AND MACHINERY AND SALES TURNOVER -->
+    <div class="snippet-card">
+      <h3>Section (L): Plant and Machinery and Sales Turnover Details <button class="copy-btn" onclick="copyId('out_l_text', this)">📋 Copy Text</button></h3>
+      <table class="copy-table" id="table_l">
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Projected Sales Turnover (₹)</th>
+            <th>Machinery Value (₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Year 1</strong></td>
+            <td class="copyable-cell" id="td_turnover_y1" onclick="copyCell(this)">-</td>
+            <td class="copyable-cell" id="td_mach_y1" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td><strong>Year 2</strong> (Turnover * 1.10 | Mach * 0.70)</td>
+            <td class="copyable-cell" id="td_turnover_y2" onclick="copyCell(this)">-</td>
+            <td class="copyable-cell" id="td_mach_y2" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td><strong>Year 3</strong> (Turnover * 1.10 | Mach * 0.70)</td>
+            <td class="copyable-cell" id="td_turnover_y3" onclick="copyCell(this)">-</td>
+            <td class="copyable-cell" id="td_mach_y3" onclick="copyCell(this)">-</td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="out_l_text" style="display:none;"></div>
+    </div>
+
+    <!-- SECTION F2 -->
+    <div class="snippet-card">
+      <h3>Section (F2): Positive Text Templates <button class="copy-btn" onclick="copyId('out_f2', this)">📋 Copy</button></h3>
+      <div class="snippet-content" id="out_f2">1. The applicant possesses deep localized knowledge of the trade area, ensuring sustained client relationships and steady cash flows.
+2. Demonstrating a proactive approach, the borrower has secured informal tie-ups with local vendors, securing a captive market for the proposed activity.
+3. Years of hands-on experience in the sector have equipped the promoter with the necessary technical know-how to navigate market fluctuations effectively.
+4. The business model is resilient and highly aligned with current regional demands, showing excellent potential for achieving the projected turnover.
+5. With a proven track record of diligent operations in similar capacities, the applicant exhibits the sheer determination required to successfully run and scale this enterprise.</div>
+    </div>
+
+    <!-- SECTION H -->
+    <div class="snippet-card">
+      <h3>Section (H): Need for Acquisition <button class="copy-btn" onclick="copyId('out_h', this)">📋 Copy</button></h3>
+      <div class="snippet-content" id="out_h">1. Migrating from a rental/lease model to an owned asset significantly reduces monthly cash burn, redirecting funds toward equity buildup and profitability.
+2. Acquiring the asset ensures operational autonomy, eliminating dependency on third-party availability during peak seasonal demand.
+3. The new asset will drastically reduce ongoing maintenance breakdowns and downtime associated with the currently utilized older/rented fleet.
+4. Asset ownership acts as a catalyst for business expansion, allowing the firm to bid for larger contracts that mandate dedicated vehicle/machinery allocation.
+5. The acquisition directly enhances the net worth of the proprietor, creating a tangible security base while improving the unit's overall EBITDA margins.</div>
+    </div>
+
+    <!-- SECTION I: AI PROMPT -->
+    <div class="snippet-card" style="border: 2px solid var(--accent);">
+      <h3>Section (I): AI Based Appraisal Prompt <button class="btn btn-primary" onclick="copyId('out_i', this)" style="padding:4px 12px;">📋 Copy Prompt for AI</button></h3>
+      <textarea id="out_i" style="width:100%; height:420px; padding:12px; font-family:monospace; font-size:0.83rem; border:1px solid var(--border); border-radius:6px; background:var(--bg); resize:vertical;" readonly></textarea>
+    </div>
+
+  </div>
+</div>
+
+<!-- CBS Extractor Modal -->
+<div class="modal-overlay" id="cbsModal">
+  <div class="modal">
+    <h2>Import from CBS Extractor</h2>
+    <p style="font-size:0.85rem; color:var(--ink-soft); margin-bottom:10px;">Paste the tab-delimited text generated by your CBS console extractor script here.</p>
+    <textarea id="cbsPasteArea" placeholder="Paste data here..."></textarea>
+    <div style="display:flex; justify-content:flex-end; gap:10px;">
+      <button class="btn" onclick="closeCbsModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="processCbsData()">Process &amp; Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast">Copied to clipboard!</div>
+
+<script>
+  // CBS Extractor Script definition from LLMS Recommendation Generator
+  const EXTRACT_SCRIPT = `(function(){
+  try {
+    var data = {};
+    document.querySelectorAll('label[for]').forEach(function(lab){
+      var forId = lab.getAttribute('for');
+      var el = document.getElementById(forId);
+      if(!el) return;
+      var tag = el.tagName.toLowerCase();
+      if(['input','select','textarea'].indexOf(tag) === -1) return;
+      if(['hidden','checkbox','radio','button','submit'].indexOf(el.type) !== -1) return;
+      var labelText = (lab.textContent || '').replace(/\\u00a0/g,' ').replace(/:\\s*$/,'').trim();
+      var value = (tag === 'select') ? (el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : el.value) : el.value;
+      value = (value || '').trim();
+      if(labelText && value) data[labelText] = value;
+    });
+    var txt = "Screen\\t" + (document.title || 'CBS_Screen') + "\\n";
+    for(var key in data) txt += key + "\\t" + data[key] + "\\n";
+    var dummy = document.createElement('textarea');
+    document.body.appendChild(dummy);
+    dummy.value = txt;
+    dummy.select();
+    document.execCommand('copy');
+    document.body.removeChild(dummy);
+    alert('Data copied to clipboard! Paste it into the Composer App.');
+  } catch(e) { alert('Extraction failed: ' + e.message); }
+})();`;
+
+  document.getElementById('extractScriptBlock').textContent = EXTRACT_SCRIPT;
+
+  function copyExtractorScript(btn) {
+    copyText(EXTRACT_SCRIPT);
+    const orig = btn.innerText;
+    btn.innerText = "✔ Copied";
+    setTimeout(() => btn.innerText = orig, 1800);
+  }
+
+  // DOM Elements Listener
+  const inputs = document.querySelectorAll('input, select, textarea');
+  inputs.forEach(el => el.addEventListener('input', generateOutputs));
+
+  function fmt(num) {
+    if (!num) return "0";
+    return Number(num).toLocaleString('en-IN');
+  }
+
+  function valOrPlaceholder(id, placeholder) {
+    const el = document.getElementById(id);
+    const val = el ? el.value.trim() : '';
+    return val ? val : `[ ${placeholder} ]`;
+  }
+
+  // Calculate age from DD/MM/YYYY or YYYY-MM-DD string
+  function computeAge(dobStr) {
+    if (!dobStr) return '';
+    let d, m, y;
+    if (dobStr.includes('/')) {
+      const parts = dobStr.split('/');
+      if (parts.length === 3) {
+        d = parseInt(parts[0], 10);
+        m = parseInt(parts[1], 10) - 1;
+        y = parseInt(parts[2], 10);
+      }
+    } else if (dobStr.includes('-')) {
+      const parts = dobStr.split('-');
+      if (parts.length === 3) {
+        if (parts[0].length === 4) {
+          y = parseInt(parts[0], 10);
+          m = parseInt(parts[1], 10) - 1;
+          d = parseInt(parts[2], 10);
+        } else {
+          d = parseInt(parts[0], 10);
+          m = parseInt(parts[1], 10) - 1;
+          y = parseInt(parts[2], 10);
+        }
+      }
+    }
+    if (!y || !m === undefined || !d) return '';
+    const birthDate = new Date(y, m, d);
+    if (isNaN(birthDate.getTime())) return '';
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 0 ? `${age} years` : '';
+  }
+
+  function clearAllFields() {
+    inputs.forEach(el => {
+      if (el.tagName === 'SELECT') {
+        el.selectedIndex = 0;
+      } else if (el.id !== 'cbsPasteArea') {
+        el.value = '';
+      }
+    });
+    document.getElementById('i_age_calc').value = '';
+    generateOutputs();
+    showToast("All fields have been cleared.");
+  }
+
+  function generateOutputs() {
+    const dobStr = document.getElementById('i_dob').value.trim();
+    const computedAge = computeAge(dobStr);
+    document.getElementById('i_age_calc').value = computedAge;
+
+    const loan = parseInt(document.getElementById('i_loan').value) || 0;
+    const scheme = document.getElementById('i_scheme').value;
+    const guar = document.getElementById('i_guar').value;
+    const subScheme = document.getElementById('i_sub_scheme').value;
+    const subAmt = parseInt(document.getElementById('i_sub_amt').value) || 0;
+    const margin = parseInt(document.getElementById('i_margin_amt').value) || 0;
+    const tenorStr = document.getElementById('i_tenor').value.split('/');
+    const tenor = (tenorStr[0] || "[ tenor ]").trim();
+    const morat = (tenorStr[1] || "[ morat ]").trim();
+    
+    const name = valOrPlaceholder('i_name', 'Applicant Name');
+    const consti = valOrPlaceholder('i_const', 'Individual');
+    const firm = valOrPlaceholder('i_firm', 'Firm Name');
+    const dependents = valOrPlaceholder('i_dependents', 'Dependents');
+    const cibil = valOrPlaceholder('i_cibil', 'CIBIL Score');
+    const address = valOrPlaceholder('i_address', 'Address / District');
+    const roi = valOrPlaceholder('i_roi', 'ROI');
+    
+    const commDate = valOrPlaceholder('i_comm_date', 'commencement date');
+    const udyam = valOrPlaceholder('i_udyam', 'Udyam Reg. No');
+    const regCertDate = valOrPlaceholder('i_reg_cert_date', 'Registration Certification Date');
+    const aadhaar = valOrPlaceholder('i_aadhaar', 'Aadhaar No');
+    const pan = valOrPlaceholder('i_pan', 'PAN');
+    const dl = valOrPlaceholder('i_dl', 'DL No');
+    const badge = valOrPlaceholder('i_badge', 'badge No');
+    const dlValidity = valOrPlaceholder('i_dl_validity', 'validity date');
+    const cibilCtrl = valOrPlaceholder('i_cibil_ctrl', 'Control No');
+    const experience = valOrPlaceholder('i_experience', 'experience');
+
+    // Contact & Address Details
+    const door = valOrPlaceholder('i_door', 'Door/Flat No.');
+    const street = valOrPlaceholder('i_street', 'Street/Road');
+    const locality = valOrPlaceholder('i_locality', 'Locality/Village');
+    const dist = valOrPlaceholder('i_dist', 'District');
+    const postcode = valOrPlaceholder('i_postcode', 'Post Code');
+    const state = valOrPlaceholder('i_state', 'State');
+    const mobile = valOrPlaceholder('i_mobile', 'Mobile Number');
+    const email = valOrPlaceholder('i_email', 'Email');
+
+    const asset = valOrPlaceholder('i_asset', 'Commercial Vehicle');
+    const cost = parseInt(document.getElementById('i_cost').value) || 0;
+    const dealer = valOrPlaceholder('i_dealer', 'Dealer');
+    const route = valOrPlaceholder('i_route', 'Route Nature');
+    
+    const dailyKm = parseFloat(document.getElementById('i_daily_km').value) || 0;
+    const opDays = parseFloat(document.getElementById('i_op_days').value) || 0;
+    const tariff = parseFloat(document.getElementById('i_tariff').value) || 0;
+    const mileage = parseFloat(document.getElementById('i_mileage').value) || 0;
+    const fuelPrice = parseFloat(document.getElementById('i_fuel_price').value) || 0;
+
+    const runStr = (dailyKm > 0 || opDays > 0 || tariff > 0) ? `${dailyKm} KM | ${opDays} days | ₹${tariff}/KM` : `[ daily run / days / tariff ]`;
+    const fuelStr = (mileage > 0 || fuelPrice > 0) ? `${mileage} KM/L | ₹${fuelPrice}/Unit` : `[ mileage / fuel price ]`;
+
+    const totalMargin = margin + subAmt;
+
+    // SECTION A
+    const schemeDisplay = scheme || '[ scheme ]';
+    const guarDisplay = guar || '[ guarantee ]';
+    const subSchemeDisplay = subScheme || '[ subsidy scheme ]';
+    document.getElementById('out_a').innerText = `Term loan of Rs. ${fmt(loan)}/- under ${schemeDisplay} covered under ${guarDisplay} with a capital subsidy of Rs. ${fmt(subAmt)} under ${subSchemeDisplay} scheme for a tenor of ${tenor} months including a moratorium period of ${morat} months.`;
+
+    // SECTION C
+    document.getElementById('out_c').innerText = `The borrower brings a margin of Rs. ${fmt(totalMargin)}/- (Rs. ${fmt(margin)} of his own funds and Rs. ${fmt(subAmt)} as capital subsidy from Govt under ${subSchemeDisplay} scheme).`;
+
+    // SECTION E & G
+    const feeAmt = Math.round(loan * 0.0059);
+    document.getElementById('out_eg').innerText = `0.5 percent of the loan amount plus applicable GST.\n\nCalculated Fee (inclusive of GST): Rs. ${fmt(feeAmt)}/-`;
+
+    // SECTION F: Borrower Profile Text
+    document.getElementById('out_f').innerText = `${name} is the proprietor of ${firm} - date of commencement of business - ${commDate} with Udyam Registration No ${udyam}\n\nAadhaar No: ${aadhaar}\nPAN: ${pan}\nDriving Licence: ${dl} with badge No. ${badge} which is valid upto ${dlValidity}\n\nIndividual CIBIL (Control No. ${cibilCtrl}) was verified and credit history was found to be satisfactory with a score of ${cibil} and no overdues. The applicant has been working in the transport sector for the last ${experience} years.\n\nNote: The latest quotation (issued by supplier ${dealer}) submitted by the borrower has an estimate of Rs. ${fmt(cost)}/- which will be funded by a TL of Rs. ${fmt(loan)}/-, capital subsidy of Rs. ${fmt(subAmt)}/- and the borrower's own contribution of Rs. ${fmt(margin)}/-\n\nOver the years the applicant operating as a ${consti} in ${address}, has demonstrated a firm grasp of the regional transport micro-economy. The chosen business model - ${route} - capitalizes on steady local demand, providing a stable revenue stream.`;
+
+    // SECTION K: Quick Copy Table Update
+    document.getElementById('td_pan').innerText = document.getElementById('i_pan').value.trim() || '-';
+    document.getElementById('td_aadhaar').innerText = document.getElementById('i_aadhaar').value.trim() || '-';
+    document.getElementById('td_dob').innerText = dobStr || '-';
+    document.getElementById('td_age').innerText = computedAge || '-';
+    document.getElementById('td_dependents').innerText = document.getElementById('i_dependents').value.trim() || '-';
+    document.getElementById('td_udyam').innerText = document.getElementById('i_udyam').value.trim() || '-';
+    document.getElementById('td_reg_date').innerText = document.getElementById('i_reg_cert_date').value.trim() || '-';
+    document.getElementById('td_door').innerText = document.getElementById('i_door').value.trim() || '-';
+    document.getElementById('td_street').innerText = document.getElementById('i_street').value.trim() || '-';
+    document.getElementById('td_locality').innerText = document.getElementById('i_locality').value.trim() || '-';
+    document.getElementById('td_dist').innerText = document.getElementById('i_dist').value.trim() || '-';
+    document.getElementById('td_postcode').innerText = document.getElementById('i_postcode').value.trim() || '-';
+    document.getElementById('td_state').innerText = document.getElementById('i_state').value.trim() || '-';
+    document.getElementById('td_mobile').innerText = document.getElementById('i_mobile').value.trim() || '-';
+    document.getElementById('td_email').innerText = document.getElementById('i_email').value.trim() || '-';
+
+    // SECTION L: Plant & Machinery and Sales Turnover Details
+    const y1Turnover = Math.round(dailyKm * opDays * tariff * 12);
+    const y2Turnover = Math.round(y1Turnover * 1.10);
+    const y3Turnover = Math.round(y2Turnover * 1.10);
+
+    const y1Mach = Math.round(cost / 1000) * 1000;
+    const y2Mach = Math.round(y1Mach * 0.70);
+    const y3Mach = Math.round(y2Mach * 0.70);
+
+    document.getElementById('td_turnover_y1').innerText = y1Turnover > 0 ? `Rs. ${fmt(y1Turnover)}/-` : '-';
+    document.getElementById('td_mach_y1').innerText = y1Mach > 0 ? `Rs. ${fmt(y1Mach)}/-` : '-';
+    document.getElementById('td_turnover_y2').innerText = y2Turnover > 0 ? `Rs. ${fmt(y2Turnover)}/-` : '-';
+    document.getElementById('td_mach_y2').innerText = y2Mach > 0 ? `Rs. ${fmt(y2Mach)}/-` : '-';
+    document.getElementById('td_turnover_y3').innerText = y3Turnover > 0 ? `Rs. ${fmt(y3Turnover)}/-` : '-';
+    document.getElementById('td_mach_y3').innerText = y3Mach > 0 ? `Rs. ${fmt(y3Mach)}/-` : '-';
+
+    document.getElementById('out_l_text').innerText = `Plant and Machinery and Sales Turnover Details:\nYear 1: Turnover = Rs. ${fmt(y1Turnover)}/-, Machinery Value = Rs. ${fmt(y1Mach)}/-\nYear 2: Turnover = Rs. ${fmt(y2Turnover)}/-, Machinery Value = Rs. ${fmt(y2Mach)}/-\nYear 3: Turnover = Rs. ${fmt(y3Turnover)}/-, Machinery Value = Rs. ${fmt(y3Mach)}/-`;
+
+    // SECTION I: AI Appraisal Prompt
+    const marginPct = cost > 0 ? ((margin/cost)*100).toFixed(2) : 0;
+    const subPct = cost > 0 ? ((subAmt/cost)*100).toFixed(2) : 0;
+    const ltv = cost > 0 ? ((loan/cost)*100).toFixed(1) : 0;
+
+    document.getElementById('out_i').value = `Act as a Senior Bank Credit Appraiser, SME/SRTO Underwriter, and Credit Risk Analyst specializing in Micro & Small Enterprises (MSE) and SRTO (Small Road Transport Operator) financing under Indian government-sponsored schemes (MUDRA, PMEGP, NEEDS, CGTMSE/CGFMU).
+
+I am appraising a term loan proposal for a micro-enterprise commercial vehicle purchase. Provide an exhaustive techno-economic viability assessment, asset specifications breakdown, operational benchmark breakdown, 5-year financial statement projection, credit risk matrix, and appraisal justification note ready for the Credit Appraisal Format (CAF).
+
+---
+### CASE INPUT VARIABLES
+
+**Applicant Profile & Statutory Credentials**
+- Borrower Name & Constitution: ${name} / ${consti}
+- Operating Firm Name: ${firm}
+- Date of Business Commencement: ${commDate}
+- Date of Birth / Calculated Age: ${dobStr || '[ DOB ]'} / ${computedAge || '[ Age ]'} | Dependents: ${dependents}
+- Udyam Registration No: ${udyam} (Cert Date: ${regCertDate})
+- Identity Documents: PAN: ${pan} | Aadhaar: ${aadhaar}
+- Professional Qualifications: Driving Licence No: ${dl} | Commercial Badge: ${badge} | Validity: ${dlValidity}
+- Industry Domain Experience: ${experience} years in transport and logistics
+- Operating Location / District & State: ${address}
+- Contact Details: Mobile: ${mobile} | Email: ${email}
+- Individual CIBIL Score & Track Record: ${cibil} (Control No: ${cibilCtrl}), nil overdues
+
+**Asset, Quotation & Proposed Financing**
+- Proposed Asset / Vehicle Model: ${asset}
+- Quotation / On-Road Cost: ₹${fmt(cost)}/- (Supplier / Dealer: ${dealer})
+- Initial Machinery Block Assessment: ₹${fmt(y1Mach)}/-
+- Business Model & Activity: ${route}
+- Target Credit Scheme: ${schemeDisplay} (Assisting Subsidy Scheme: ${subSchemeDisplay})
+- Promoter Margin Contribution: ${marginPct}% (₹${fmt(margin)}/-)
+- Expected Government Capital Subsidy: ${subPct}% (₹${fmt(subAmt)}/-)
+- Proposed Bank Term Loan: ₹${fmt(loan)}/-
+- Interest Rate & Repayment Tenure: ${roi}% p.a., ${tenor} months with ${morat} month(s) moratorium
+- Statutory Guarantee Scheme Routing: ${guarDisplay} (LTV: ${ltv}%)
+
+**Operational Assumptions & Turnover Estimates**
+- Operational Run: ${dailyKm} KM/day over ${opDays} operating days/month @ ₹${tariff}/KM
+- Projected Base Turnover (Year 1): ₹${fmt(y1Turnover)}/- (Escalating at 10% YoY)
+- Mileage & Regional Fuel Price: ${fuelStr}
+- Driving Arrangement: Owner-cum-driver (proprietor holds valid commercial badge)
+
+---
+### EVALUATION & APPRAISAL REQUIREMENTS:
+
+#### SECTION 1: ASSET SPECIFICATIONS & ENTREPRENEURIAL UTILITY
+1. Technical specifications for ${asset}: Engine displacement, fuel type/CNG capacity, payload/seating capacity, certified vs. realistic loaded fuel efficiency.
+2. Value Creation & Entrepreneurial Impact: Detail how moving from rental/leasing to owning ${asset} eliminates rental cash burn, elevates take-home surplus, strengthens the balance sheet, and enhances operational autonomy.
+
+#### SECTION 2: ROUTE VIABILITY & OPERATIONAL BENCHMARKS
+1. Run three operating scenarios (Lean, Realistic base on ${runStr}, and Peak).
+2. Itemize operational expenditure (Fuel burn calibrated to fuel parameters, routine maintenance, tyre wear, insurance, and statutory contingency).
+
+#### SECTION 3: PROJECT OUTLAY, FINANCING & GUARANTEE ROUTING
+1. Means of Finance table (Asset Cost, Margin, Subsidy, Net Term Loan).
+2. Statutory Guarantee Coverage under ${guarDisplay} with fee schedules.
+
+#### SECTION 4: 5-YEAR WDV DEPRECIATION SCHEDULE & MACHINERY RUN-DOWN
+Build a 5-year depreciation table following Income Tax Act rules (30% WDV for commercial vehicles) starting from ₹${fmt(cost)}/-. Compare it against the 3-year Machinery Value projection (Y1: ₹${fmt(y1Mach)}/-, Y2: ₹${fmt(y2Mach)}/-, Y3: ₹${fmt(y3Mach)}/-).
+
+#### SECTION 5: 3-COMPONENT FINANCIAL STATEMENTS & DEBT SERVICING (5-YEAR PROJECTION)
+Provide a 5-year financial statement projection incorporating the base turnover of ₹${fmt(y1Turnover)}/- escalating at 10% annually:
+1. P&L Statement (Turnover, Direct Opex, EBITDA, Depreciation @ 30% WDV, Interest, PBT, Tax, PAT).
+2. Cash Flow & Debt Servicing (Gross Cash Accrual, Principal Repayment, Annual Interest, Debt Service Obligation, DSCR per year, and Average DSCR >= 1.50x).
+3. Balance Sheet Summary (Closing Term Loan Balance, Net Worth).
+
+#### SECTION 6: FORMAL APPRAISAL JUSTIFICATION NOTE (CAF FORMAT)
+Generate 3 professional appraisal paragraphs:
+1. Profile & Track Record (${experience} years experience, DL: ${dl}, Badge: ${badge}, familiarity with ${address}).
+2. Statutory Diligence & Credit Scoring (CIBIL: ${cibil}, Control No: ${cibilCtrl}, KYC, PAN: ${pan}, Udyam: ${udyam}).
+3. Economic Viability & Recommendation (Asset acquisition of ${asset} from ${dealer}, debt service comfort, and explicit sanction recommendation).`;
+  }
+
+  // Utilities & Interactions
+  function copyText(text, btnElement = null) {
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+    
+    showToast();
+    if(btnElement) {
+      const origBg = btnElement.style.background;
+      btnElement.style.background = "#86efac";
+      setTimeout(() => btnElement.style.background = origBg, 500);
+    }
+  }
+
+  function copyCell(td) {
+    const txt = td.innerText.trim();
+    if(!txt || txt === '-') return;
+    copyText(txt, td);
+  }
+
+  function copyId(elementId, btnElement) {
+    const el = document.getElementById(elementId);
+    copyText(el.value !== undefined ? el.value : el.innerText);
+    
+    const origText = btnElement.innerText;
+    btnElement.innerText = "✔ Copied";
+    btnElement.style.background = "var(--success)";
+    btnElement.style.color = "white";
+    setTimeout(() => {
+      btnElement.innerText = origText;
+      btnElement.style.background = "";
+      btnElement.style.color = "";
+    }, 2000);
+  }
+
+  function showToast(msg = "Copied to clipboard!") {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.style.opacity = '1';
+    setTimeout(() => toast.style.opacity = '0', 2000);
+  }
+
+  // JSON State Management
+  function getStateObj() {
+    const state = {};
+    inputs.forEach(el => { if(el.id) state[el.id] = el.value; });
+    return state;
+  }
+  
+  function exportData() {
+    const nameVal = document.getElementById('i_name').value.trim() || 'Customer';
+    const json = JSON.stringify(getStateObj(), null, 2);
+    const blob = new Blob([json], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Loan_Prompt_Data_${nameVal.replace(/\s+/g,'_')}.json`;
+    a.click();
+  }
+  
+  function importData(event) {
+    const file = event.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        Object.keys(data).forEach(key => {
+          const el = document.getElementById(key);
+          if (el) el.value = data[key];
+        });
+        generateOutputs();
+      } catch(err) { alert("Invalid JSON file"); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  // CBS Extractor Import Logic
+  function openCbsModal() { document.getElementById('cbsModal').style.display = 'flex'; }
+  function closeCbsModal() { document.getElementById('cbsModal').style.display = 'none'; document.getElementById('cbsPasteArea').value = ''; }
+  
+  function processCbsData() {
+    const text = document.getElementById('cbsPasteArea').value;
+    if(!text.trim()) return closeCbsModal();
+
+    const lines = text.split('\n');
+    const fields = {};
+    lines.forEach(l => {
+      let match = l.match(/^(.*?)(?:\t| {2,}|[\u2002\u2003\u00a0]+)(.*)$/);
+      if(match) {
+        fields[match[1].toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()] = match[2].trim();
+      } else {
+        let parts = l.split('\t');
+        if(parts.length >= 2) fields[parts[0].toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()] = parts.slice(1).join(' ').trim();
+      }
+    });
+
+    const getField = (keys) => { for(let k of keys) if(fields[k]) return fields[k]; return ''; };
+
+    const cbsName = getField(['customer name', 'account name', 'name']);
+    if(cbsName) document.getElementById('i_name').value = cbsName;
+    
+    const cbsLoan = getField(['sanctioned limit', 'application amount', 'approved amount', 'limit']);
+    if(cbsLoan) document.getElementById('i_loan').value = cbsLoan.replace(/,/g, '');
+
+    const door = getField(['door flat no building society', 'door/ flat no./ building/ society']);
+    if(door) document.getElementById('i_door').value = door;
+
+    const street = getField(['street road name block', 'street / road name / block']);
+    if(street) document.getElementById('i_street').value = street;
+
+    const locality = getField(['locality village tehsil', 'locality / village / tehsil']);
+    if(locality) document.getElementById('i_locality').value = locality;
+
+    let dist = getField(['district']).replace(/^\d+:/, '').trim();
+    if(dist) document.getElementById('i_dist').value = dist;
+
+    const pc = getField(['post code', 'pincode']);
+    if(pc) document.getElementById('i_postcode').value = pc;
+
+    let stateVal = getField(['state']).replace(/^\d+:/, '').trim();
+    if(stateVal) document.getElementById('i_state').value = stateVal;
+
+    const mobile = getField(['mobile number', 'mobile']);
+    if(mobile) document.getElementById('i_mobile').value = mobile;
+
+    const email = getField(['mail', 'email', 'e mail']);
+    if(email) document.getElementById('i_email').value = email;
+
+    const pan = getField(['pan', 'pan number']);
+    if(pan) document.getElementById('i_pan').value = pan;
+
+    const dob = getField(['date of birth', 'dob', 'birth date']);
+    if(dob) document.getElementById('i_dob').value = dob;
+
+    const fullAddr = [door, street, locality, dist, pc].filter(Boolean).join(', ');
+    if(fullAddr) document.getElementById('i_address').value = fullAddr;
+    
+    generateOutputs();
+    closeCbsModal();
+  }
+
+  // Initialize
+  generateOutputs();
+</script>
+</body>
+</html>
