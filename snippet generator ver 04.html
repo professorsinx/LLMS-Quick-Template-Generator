@@ -80,6 +80,7 @@
       <button class="btn btn-danger" onclick="clearAllFields()">🧹 Clear All Fields</button>
       <button class="btn" onclick="openCbsModal()">📥 Import CBS Data</button>
       <button class="btn" onclick="exportData()">💾 Export JSON</button>
+      <button class="btn btn-primary" onclick="openInspectionModal()" style="background:#10b981; border-color:#059669;">📝 Pre-Sanction Inspection</button>
       <button class="btn" onclick="document.getElementById('importFile').click()">📂 Import JSON</button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
     </div>
@@ -88,12 +89,13 @@
   <!-- INPUTS PANEL -->
   <div class="panel">
     <div class="panel-title">Proposal Inputs</div>
-    
+
     <div class="sec-heading">1. Applicant &amp; Entity Profile</div>
     <div class="form-group"><label>Applicant Name</label><input type="text" id="i_name" value=""></div>
-    <div class="form-row">
+    <div class="form-row-3">
       <div class="form-group"><label>Constitution</label><input type="text" id="i_const" value=""></div>
       <div class="form-group"><label>Firm Name</label><input type="text" id="i_firm" value=""></div>
+      <div class="form-group"><label>Activity</label><input type="text" id="i_activity" placeholder="Retail / Services" value=""></div>
     </div>
     
     <div class="form-row-3">
@@ -193,9 +195,10 @@
 
     <div class="sec-heading">5. Asset Details &amp; Operational Benchmarks</div>
     <div class="form-group"><label>Asset Details</label><input type="text" id="i_asset" value=""></div>
-    <div class="form-row">
+    <div class="form-row-3">
       <div class="form-group"><label>Asset Cost (₹)</label><input type="number" id="i_cost" value=""></div>
       <div class="form-group"><label>Dealer</label><input type="text" id="i_dealer" value=""></div>
+      <div class="form-group"><label>Dealer GST No.</label><input type="text" id="i_gst" placeholder="" value=""></div>
     </div>
 
     <div class="form-group"><label>Business/Route Nature</label><input type="text" id="i_route" value=""></div>
@@ -205,7 +208,7 @@
       <div style="font-size:0.7rem; font-weight:800; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase;">Operations &amp; Freight Realization</div>
       <div class="form-row-3">
         <div class="form-group" style="margin-bottom:0;"><label>Daily Run (KM)</label><input type="number" id="i_daily_km" value=""></div>
-        <div class="form-group" style="margin-bottom:0;"><label>Days / Month</label><input type="number" id="i_op_days" value=""></div>
+        <div class="form-group" style="margin-bottom:0;"><label>Days / Montfh</label><input type="number" id="i_op_days" value=""></div>
         <div class="form-group" style="margin-bottom:0;"><label>Tariff (₹/KM)</label><input type="number" id="i_tariff" value=""></div>
       </div>
     </div>
@@ -218,7 +221,13 @@
         <div class="form-group" style="margin-bottom:0;"><label>Fuel Price (₹/Unit)</label><input type="number" step="0.5" id="i_fuel_price" value=""></div>
       </div>
     </div>
-
+    
+    <div class="sec-heading">6. Pre-Sanction Attachments</div>
+    <div class="form-group">
+      <label>Upload Site/Residence Collage</label>
+      <input type="file" id="i_photo" accept="image/*" onchange="processWatermark(event)">
+    </div>
+    
   </div>
 
   <!-- OUTPUTS PANEL -->
@@ -297,30 +306,61 @@ TL :- To be reviewed annually.</div>
       <h3>Section (K): Quick Copy Loan Attributes <span style="font-size:0.75rem; font-weight:normal; color:var(--ink-soft);">(Click any cell to copy value)</span></h3>
       <table class="copy-table">
         <thead>
-          <tr><th style="width:38%;">Attribute</th><th>Value</th></tr>
+          <tr>
+            <th style="width:25%;">Attribute</th>
+            <th style="width:25%;">Value</th>
+            <th style="width:25%;">Attribute</th>
+            <th style="width:25%;">Value</th>
+          </tr>
         </thead>
         <tbody>
-          <tr><td>PAN</td><td class="copyable-cell" id="td_pan" onclick="copyCell(this)">-</td></tr>
-          <tr><td>Aadhaar</td><td class="copyable-cell" id="td_aadhaar" onclick="copyCell(this)">-</td></tr>
-          <tr><td>Date of Birth</td><td class="copyable-cell" id="td_dob" onclick="copyCell(this)">-</td></tr>
-          <tr><td>Age</td><td class="copyable-cell" id="td_age" onclick="copyCell(this)">-</td></tr>
-          <tr><td>Dependents</td><td class="copyable-cell" id="td_dependents" onclick="copyCell(this)">-</td></tr>
-          <tr><td>Registration Certification Number</td><td class="copyable-cell" id="td_udyam" onclick="copyCell(this)">-</td></tr>
-          <tr><td>Registration Certification Date</td><td class="copyable-cell" id="td_reg_date" onclick="copyCell(this)">-</td></tr>
           <tr>
-            <td colspan="2" style="background:#f8fafc; font-weight:bold; color:var(--accent); padding:6px 8px;">Sub-table: Address (Imported / Form Details)</td>
+            <td>Applicant Name</td><td class="copyable-cell" id="td_name" onclick="copyCell(this)">-</td>
+            <td>Activity</td><td class="copyable-cell" id="td_activity" onclick="copyCell(this)">-</td>
           </tr>
-          <tr><td style="padding-left:18px;">Door/ Flat No./ Building/ Society</td><td class="copyable-cell" id="td_door" onclick="copyCell(this)">-</td></tr>
-          <tr><td style="padding-left:18px;">Street / Road Name / Block</td><td class="copyable-cell" id="td_street" onclick="copyCell(this)">-</td></tr>
-          <tr><td style="padding-left:18px;">Locality / Village / Tehsil</td><td class="copyable-cell" id="td_locality" onclick="copyCell(this)">-</td></tr>
-          <tr><td style="padding-left:18px;">District</td><td class="copyable-cell" id="td_dist" onclick="copyCell(this)">-</td></tr>
-          <tr><td style="padding-left:18px;">Post Code</td><td class="copyable-cell" id="td_postcode" onclick="copyCell(this)">-</td></tr>
-          <tr><td style="padding-left:18px;">State</td><td class="copyable-cell" id="td_state" onclick="copyCell(this)">-</td></tr>
-          <tr><td style="padding-left:18px;">Mobile Number</td><td class="copyable-cell" id="td_mobile" onclick="copyCell(this)">-</td></tr>
-          <tr><td style="padding-left:18px;">Email</td><td class="copyable-cell" id="td_email" onclick="copyCell(this)">-</td></tr>
+          <tr>
+            <td>Constitution</td><td class="copyable-cell" id="td_const" onclick="copyCell(this)">-</td>
+            <td>Firm Name</td><td class="copyable-cell" id="td_firm" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td>Date of Birth</td><td class="copyable-cell" id="td_dob" onclick="copyCell(this)">-</td>
+            <td>Age</td><td class="copyable-cell" id="td_age" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td>PAN</td><td class="copyable-cell" id="td_pan" onclick="copyCell(this)">-</td>
+            <td>Aadhaar</td><td class="copyable-cell" id="td_aadhaar" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td>Udyam Reg. No</td><td class="copyable-cell" id="td_udyam" onclick="copyCell(this)">-</td>
+            <td>Dependents</td><td class="copyable-cell" id="td_dependents" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td>Commencement Date</td><td class="copyable-cell" id="td_comm_date" onclick="copyCell(this)">-</td>
+            <td>Reg. Certification Date</td><td class="copyable-cell" id="td_reg_date" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td colspan="4" style="background:#f8fafc; font-weight:bold; color:var(--accent); padding:6px 8px;">Sub-table: Address & Contact Details</td>
+          </tr>
+          <tr>
+            <td>Door/ Flat No.</td><td class="copyable-cell" id="td_door" onclick="copyCell(this)">-</td>
+            <td>Street / Road Name</td><td class="copyable-cell" id="td_street" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td>Locality / Village</td><td class="copyable-cell" id="td_locality" onclick="copyCell(this)">-</td>
+            <td>District</td><td class="copyable-cell" id="td_dist" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td>Post Code</td><td class="copyable-cell" id="td_postcode" onclick="copyCell(this)">-</td>
+            <td>State</td><td class="copyable-cell" id="td_state" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td>Mobile Number</td><td class="copyable-cell" id="td_mobile" onclick="copyCell(this)">-</td>
+            <td>Email</td><td class="copyable-cell" id="td_email" onclick="copyCell(this)">-</td>
+          </tr>
         </tbody>
       </table>
     </div>
+    
 
     <!-- SECTION L: PLANT AND MACHINERY AND SALES TURNOVER -->
     <div class="snippet-card">
@@ -366,14 +406,16 @@ TL :- To be reviewed annually.</div>
 
     <!-- SECTION H -->
     <div class="snippet-card">
-      <h3>Section (H): Need for Acquisition <button class="copy-btn" onclick="copyId('out_h', this)">📋 Copy</button></h3>
-      <div class="snippet-content" id="out_h">1. Migrating from a rental/lease model to an owned asset significantly reduces monthly cash burn, redirecting funds toward equity buildup and profitability.
-2. Acquiring the asset ensures operational autonomy, eliminating dependency on third-party availability during peak seasonal demand.
-3. The new asset will drastically reduce ongoing maintenance breakdowns and downtime associated with the currently utilized older/rented fleet.
-4. Asset ownership acts as a catalyst for business expansion, allowing the firm to bid for larger contracts that mandate dedicated vehicle/machinery allocation.
-5. The acquisition directly enhances the net worth of the proprietor, creating a tangible security base while improving the unit's overall EBITDA margins.</div>
+      <h3>Section (H): Need for Acquisition <span style="font-size:0.75rem; font-weight:normal; color:var(--ink-soft);">(Click any cell to copy)</span></h3>
+      <table class="copy-table">
+        <tbody>
+          <tr><td class="copyable-cell" onclick="copyCell(this)">1. Asset acquisition will eliminate recurring rental expenses, directly augmenting net cash accruals and strengthening the unit's operating margins.</td></tr>
+          <tr><td class="copyable-cell" onclick="copyCell(this)">2. Owning the machinery ensures uninterrupted production capacity and removes dependency on third-party availability during peak seasonal demand.</td></tr>
+          <tr><td class="copyable-cell" onclick="copyCell(this)">3. Upgradation of the existing asset is essential to maintain market competitiveness and achieve the projected sales turnover efficiently.</td></tr>
+        </tbody>
+      </table>
     </div>
-
+    
     <!-- SECTION I: AI PROMPT -->
     <div class="snippet-card" style="border: 2px solid var(--accent);">
       <h3>Section (I): AI Based Appraisal Prompt <button class="btn btn-primary" onclick="copyId('out_i', this)" style="padding:4px 12px;">📋 Copy Prompt for AI</button></h3>
@@ -392,6 +434,22 @@ TL :- To be reviewed annually.</div>
     <div style="display:flex; justify-content:flex-end; gap:10px;">
       <button class="btn" onclick="closeCbsModal()">Cancel</button>
       <button class="btn btn-primary" onclick="processCbsData()">Process &amp; Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pre-Sanction Inspection Modal (God Mode) -->
+<div class="modal-overlay" id="inspectionModal">
+  <div class="modal" style="width: 850px; max-height: 90vh; display: flex; flex-direction: column;">
+    <h2>📝 Pre-Sanction Survey Report Editor</h2>
+    <p style="font-size:0.85rem; color:var(--ink-soft); margin-bottom:10px;">Edit the formatted document freely in God Mode before opening in a new tab.</p>
+    
+    <!-- Rich Text Editable Div -->
+    <div id="inspectionEditor" contenteditable="true" style="flex-grow: 1; height: 480px; overflow-y: auto; background: white; padding: 30px; border: 1px solid var(--border); border-radius: 4px; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);"></div>
+    
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top: 15px;">
+      <button class="btn" onclick="closeInspectionModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="openFormattedTab()" style="background:#10b981; border-color:#059669;">🖨️ Open Formatted in New Tab</button>
     </div>
   </div>
 </div>
@@ -550,6 +608,7 @@ TL :- To be reviewed annually.</div>
     const asset = valOrPlaceholder('i_asset', 'Commercial Vehicle');
     const cost = parseInt(document.getElementById('i_cost').value) || 0;
     const dealer = valOrPlaceholder('i_dealer', 'Dealer');
+    const gst = valOrPlaceholder('i_gst', 'GST No.');
     const route = valOrPlaceholder('i_route', 'Route Nature');
     
     const dailyKm = parseFloat(document.getElementById('i_daily_km').value) || 0;
@@ -577,9 +636,13 @@ TL :- To be reviewed annually.</div>
     document.getElementById('out_eg').innerText = `0.5 percent of the loan amount plus applicable GST.\n\nCalculated Fee (inclusive of GST): Rs. ${fmt(feeAmt)}/-`;
 
     // SECTION F: Borrower Profile Text
-    document.getElementById('out_f').innerText = `${name} is the proprietor of ${firm} - date of commencement of business - ${commDate} with Udyam Registration No ${udyam}\n\nAadhaar No: ${aadhaar}\nPAN: ${pan}\nDriving Licence: ${dl} with badge No. ${badge} which is valid upto ${dlValidity}\n\nIndividual CIBIL (Control No. ${cibilCtrl} dated ${cibilDate}) was verified and credit history was found to be satisfactory with a score of ${cibil} and no overdues. The applicant has been working in the transport sector for the last ${experience} years.\n\nNote: The latest quotation (issued by supplier ${dealer}) submitted by the borrower has an estimate of Rs. ${fmt(cost)}/- which will be funded by a TL of Rs. ${fmt(loan)}/-, capital subsidy of Rs. ${fmt(subAmt)}/- and the borrower's own contribution of Rs. ${fmt(margin)}/-\n\nOver the years the applicant operating as a ${consti} in ${address}, has demonstrated a firm grasp of the regional transport micro-economy. The chosen business model - ${route} - capitalizes on steady local demand, providing a stable revenue stream.`;
+    document.getElementById('out_f').innerText = `${name} is the proprietor of ${firm} - date of commencement of business - ${commDate} with Udyam Registration No ${udyam}\n\nAadhaar No: ${aadhaar}\nPAN: ${pan}\nDriving Licence: ${dl} with badge No. ${badge} which is valid upto ${dlValidity}\n\nIndividual CIBIL (Control No. ${cibilCtrl} dated ${cibilDate}) was verified and credit history was found to be satisfactory with a score of ${cibil} and no overdues. The applicant has been working in the transport sector for the last ${experience} years.\n\nNote: The latest quotation (issued by supplier ${dealer} with GST: ${gst} which was cross checked with the GST portal) submitted by the borrower has an estimate of Rs. ${fmt(cost)}/- which will be funded by a TL of Rs. ${fmt(loan)}/-, capital subsidy of Rs. ${fmt(subAmt)}/- and the borrower's own contribution of Rs. ${fmt(margin)}/-\n\nOver the years the applicant operating as a ${consti} in ${address}, has demonstrated a firm grasp of the regional transport micro-economy. The chosen business model - ${route} - capitalizes on steady local demand, providing a stable revenue stream.`;
 
     // SECTION K: Quick Copy Table Update
+    document.getElementById('td_activity').innerText = document.getElementById('i_activity').value.trim() || '-';
+    document.getElementById('td_const').innerText = document.getElementById('i_const').value.trim() || '-';
+    document.getElementById('td_firm').innerText = document.getElementById('i_firm').value.trim() || '-';
+    document.getElementById('td_name').innerText = document.getElementById('i_name').value.trim() || '-';
     document.getElementById('td_pan').innerText = document.getElementById('i_pan').value.trim() || '-';
     document.getElementById('td_aadhaar').innerText = document.getElementById('i_aadhaar').value.trim() || '-';
     document.getElementById('td_dob').innerText = dobStr || '-';
@@ -621,71 +684,75 @@ TL :- To be reviewed annually.</div>
 
     document.getElementById('out_i').value = `Act as a Senior Bank Credit Appraiser, SME/SRTO Underwriter, and Credit Risk Analyst specializing in Micro & Small Enterprises (MSE) and SRTO (Small Road Transport Operator) financing under Indian government-sponsored schemes (MUDRA, PMEGP, NEEDS, CGTMSE/CGFMU).
 
-I am appraising a term loan proposal for a micro-enterprise commercial vehicle purchase. Provide an exhaustive techno-economic viability assessment, asset specifications breakdown, operational benchmark breakdown, 5-year financial statement projection, credit risk matrix, and appraisal justification note ready for the Credit Appraisal Format (CAF).
+  I am appraising a term loan proposal for a micro-enterprise commercial vehicle purchase. Provide an exhaustive techno-economic viability assessment, asset specifications breakdown, operational benchmark breakdown, 5-year financial statement projection, credit risk matrix, and appraisal justification note ready for the Credit Appraisal Format (CAF).
 
----
-### CASE INPUT VARIABLES
+  ---
+  ### CASE INPUT VARIABLES
 
-**Applicant Profile & Statutory Credentials**
-- Borrower Name & Constitution: ${name} / ${consti}
-- Operating Firm Name: ${firm}
-- Date of Business Commencement: ${commDate}
-- Date of Birth / Calculated Age: ${dobStr || '[ DOB ]'} / ${computedAge || '[ Age ]'} | Dependents: ${dependents}
-- Udyam Registration No: ${udyam} (Cert Date: ${regCertDate})
-- Identity Documents: PAN: ${pan} | Aadhaar: ${aadhaar}
-- Professional Qualifications: Driving Licence No: ${dl} | Commercial Badge: ${badge} | Validity: ${dlValidity}
-- Industry Domain Experience: ${experience} years in transport and logistics
-- Operating Location / District & State: ${address}
-- Contact Details: Mobile: ${mobile} | Email: ${email}
-- Individual CIBIL Score & Track Record: ${cibil} (Control No: ${cibilCtrl}), nil overdues
+  **Applicant Profile & Statutory Credentials**
+  - Borrower Name & Constitution: ${name} / ${consti}
+  - Operating Firm Name: ${firm}
+  - Date of Business Commencement: ${commDate}
+  - Date of Birth / Calculated Age: ${dobStr || '[ DOB ]'} / ${computedAge || '[ Age ]'} | Dependents: ${dependents}
+  - Udyam Registration No: ${udyam} (Cert Date: ${regCertDate})
+  - Identity Documents: PAN: ${pan} | Aadhaar: ${aadhaar}
+  - Professional Qualifications: Driving Licence No: ${dl} | Commercial Badge: ${badge} | Validity: ${dlValidity}
+  - Industry Domain Experience: ${experience} years in transport and logistics
+  - Operating Location / District & State: ${address}
+  - Contact Details: Mobile: ${mobile} | Email: ${email}
+  - Individual CIBIL Score & Track Record: ${cibil} (Control No: ${cibilCtrl}), nil overdues
 
-**Asset, Quotation & Proposed Financing**
-- Proposed Asset / Vehicle Model: ${asset}
-- Quotation / On-Road Cost: ₹${fmt(cost)}/- (Supplier / Dealer: ${dealer})
-- Initial Machinery Block Assessment: ₹${fmt(y1Mach)}/-
-- Business Model & Activity: ${route}
-- Target Credit Scheme: ${schemeDisplay} (Assisting Subsidy Scheme: ${subSchemeDisplay})
-- Promoter Margin Contribution: ${marginPct}% (₹${fmt(margin)}/-)
-- Expected Government Capital Subsidy: ${subPct}% (₹${fmt(subAmt)}/-)
-- Proposed Bank Term Loan: ₹${fmt(loan)}/-
-- Interest Rate & Repayment Tenure: ${roi}% p.a., ${tenor} months with ${morat} month(s) moratorium
-- Statutory Guarantee Scheme Routing: ${guarDisplay} (LTV: ${ltv}%)
+  **Asset, Quotation & Proposed Financing**
+  - Proposed Asset / Vehicle Model: ${asset}
+  - Quotation / On-Road Cost: ₹${fmt(cost)}/- (Supplier / Dealer: ${dealer})
+  - Initial Machinery Block Assessment: ₹${fmt(y1Mach)}/-
+  - Business Model & Activity: ${route}
+  - Target Credit Scheme: ${schemeDisplay} (Assisting Subsidy Scheme: ${subSchemeDisplay})
+  - Promoter Margin Contribution: ${marginPct}% (₹${fmt(margin)}/-)
+  - Expected Government Capital Subsidy: ${subPct}% (₹${fmt(subAmt)}/-)
+  - Proposed Bank Term Loan: ₹${fmt(loan)}/-
+  - Interest Rate & Repayment Tenure: ${roi}% p.a., ${tenor} months with ${morat} month(s) moratorium
+  - Statutory Guarantee Scheme Routing: ${guarDisplay} (LTV: ${ltv}%)
 
-**Operational Assumptions & Turnover Estimates**
-- Operational Run: ${dailyKm} KM/day over ${opDays} operating days/month @ ₹${tariff}/KM
-- Projected Base Turnover (Year 1): ₹${fmt(y1Turnover)}/- (Escalating at 10% YoY)
-- Mileage & Regional Fuel Price: ${fuelStr}
-- Driving Arrangement: Owner-cum-driver (proprietor holds valid commercial badge)
+  **Operational Assumptions & Turnover Estimates**
+  - Operational Run: ${dailyKm} KM/day over ${opDays} operating days/month @ ₹${tariff}/KM
+  - Projected Base Turnover (Year 1): ₹${fmt(y1Turnover)}/- (Escalating at 10% YoY)
+  - Mileage & Regional Fuel Price: ${fuelStr}
+  - Driving Arrangement: Owner-cum-driver (proprietor holds valid commercial badge)
 
----
-### EVALUATION & APPRAISAL REQUIREMENTS:
+  ---
+  ### EVALUATION & APPRAISAL REQUIREMENTS:
 
-#### SECTION 1: ASSET SPECIFICATIONS & ENTREPRENEURIAL UTILITY
-1. Technical specifications for ${asset}: Engine displacement, fuel type/CNG capacity, payload/seating capacity, certified vs. realistic loaded fuel efficiency.
-2. Value Creation & Entrepreneurial Impact: Detail how moving from rental/leasing to owning ${asset} eliminates rental cash burn, elevates take-home surplus, strengthens the balance sheet, and enhances operational autonomy.
+  #### SECTION 1: ASSET SPECIFICATIONS & ENTREPRENEURIAL UTILITY
+  1. Technical specifications for ${asset}: Engine displacement, fuel type/CNG capacity, payload/seating capacity, certified vs. realistic loaded fuel efficiency.
+  2. Value Creation & Entrepreneurial Impact: Detail how moving from rental/leasing to owning ${asset} eliminates rental cash burn, elevates take-home surplus, strengthens the balance sheet, and enhances operational autonomy.
 
-#### SECTION 2: ROUTE VIABILITY & OPERATIONAL BENCHMARKS
-1. Run three operating scenarios (Lean, Realistic base on ${runStr}, and Peak).
-2. Itemize operational expenditure (Fuel burn calibrated to fuel parameters, routine maintenance, tyre wear, insurance, and statutory contingency).
+  #### SECTION 2: ROUTE VIABILITY & OPERATIONAL BENCHMARKS
+  1. Run three operating scenarios (Lean, Realistic base on ${runStr}, and Peak).
+  2. Itemize operational expenditure (Fuel burn calibrated to fuel parameters, routine maintenance, tyre wear, insurance, and statutory contingency).
 
-#### SECTION 3: PROJECT OUTLAY, FINANCING & GUARANTEE ROUTING
-1. Means of Finance table (Asset Cost, Margin, Subsidy, Net Term Loan).
-2. Statutory Guarantee Coverage under ${guarDisplay} with fee schedules.
+  #### SECTION 3: PROJECT OUTLAY, FINANCING & GUARANTEE ROUTING
+  1. Means of Finance table (Asset Cost, Margin, Subsidy, Net Term Loan).
+  2. Statutory Guarantee Coverage under ${guarDisplay} with fee schedules.
 
-#### SECTION 4: 5-YEAR WDV DEPRECIATION SCHEDULE & MACHINERY RUN-DOWN
-Build a 5-year depreciation table following Income Tax Act rules (30% WDV for commercial vehicles) starting from ₹${fmt(cost)}/-. Compare it against the 3-year Machinery Value projection (Y1: ₹${fmt(y1Mach)}/-, Y2: ₹${fmt(y2Mach)}/-, Y3: ₹${fmt(y3Mach)}/-).
+  #### SECTION 4: 5-YEAR WDV DEPRECIATION SCHEDULE & MACHINERY RUN-DOWN
+  Build a 5-year depreciation table following Income Tax Act rules (30% WDV for commercial vehicles) starting from ₹${fmt(cost)}/-. Compare it against the 3-year Machinery Value projection (Y1: ₹${fmt(y1Mach)}/-, Y2: ₹${fmt(y2Mach)}/-, Y3: ₹${fmt(y3Mach)}/-).
 
-#### SECTION 5: 3-COMPONENT FINANCIAL STATEMENTS & DEBT SERVICING (5-YEAR PROJECTION)
-Provide a 5-year financial statement projection incorporating the base turnover of ₹${fmt(y1Turnover)}/- escalating at 10% annually:
-1. P&L Statement (Turnover, Direct Opex, EBITDA, Depreciation @ 30% WDV, Interest, PBT, Tax, PAT).
-2. Cash Flow & Debt Servicing (Gross Cash Accrual, Principal Repayment, Annual Interest, Debt Service Obligation, DSCR per year, and Average DSCR >= 1.50x).
-3. Balance Sheet Summary (Closing Term Loan Balance, Net Worth).
+  #### SECTION 5: 3-COMPONENT FINANCIAL STATEMENTS & DEBT SERVICING (5-YEAR PROJECTION)
+  Provide a 5-year financial statement projection incorporating the base turnover of ₹${fmt(y1Turnover)}/- escalating at 10% annually:
+  1. P&L Statement (Turnover, Direct Opex, EBITDA, Depreciation @ 30% WDV, Interest, PBT, Tax, PAT).
+  2. Cash Flow & Debt Servicing (Gross Cash Accrual, Principal Repayment, Annual Interest, Debt Service Obligation, DSCR per year, and Average DSCR >= 1.50x).
+  3. Balance Sheet Summary (Closing Term Loan Balance, Net Worth).
 
-#### SECTION 6: FORMAL APPRAISAL JUSTIFICATION NOTE (CAF FORMAT)
-Generate 3 professional appraisal paragraphs:
-1. Profile & Track Record (${experience} years experience, DL: ${dl}, Badge: ${badge}, familiarity with ${address}).
-2. Statutory Diligence & Credit Scoring (CIBIL: ${cibil}, Control No: ${cibilCtrl}, KYC, PAN: ${pan}, Udyam: ${udyam}).
-3. Economic Viability & Recommendation (Asset acquisition of ${asset} from ${dealer}, debt service comfort, and explicit sanction recommendation).`;
+  #### SECTION 6: FORMAL APPRAISAL JUSTIFICATION NOTE (CAF FORMAT)
+  Generate 3 professional appraisal paragraphs:
+  1. Profile & Track Record (${experience} years experience, DL: ${dl}, Badge: ${badge}, familiarity with ${address}).
+  2. Statutory Diligence & Credit Scoring (CIBIL: ${cibil}, Control No: ${cibilCtrl}, KYC, PAN: ${pan}, Udyam: ${udyam}).
+  3. Economic Viability & Recommendation (Asset acquisition of ${asset} from ${dealer}, debt service comfort, and explicit sanction recommendation).`;
+    
+      // Update watermark dynamically if an image is already loaded
+    if (typeof applyWatermark === "function") applyWatermark();
+
   }
 
   // Utilities & Interactions
@@ -831,6 +898,198 @@ Generate 3 professional appraisal paragraphs:
     
     generateOutputs();
     closeCbsModal();
+  }
+
+  //watermark processing for uploaded images
+  let watermarkedImageData = "";
+  let rawImageSrc = "";
+
+  function processWatermark(event) {
+    const file = event.target.files[0];
+    if (!file) { 
+      rawImageSrc = ""; 
+      watermarkedImageData = ""; 
+      return; 
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      rawImageSrc = e.target.result;
+      applyWatermark(); // Apply watermark immediately upon upload
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function applyWatermark() {
+    if (!rawImageSrc) return;
+    
+    // Grabs the live values at the exact moment of drawing
+    const name = document.getElementById('i_name').value.trim() || '[ Applicant Name ]';
+    const pan = document.getElementById('i_pan').value.trim() || '[ PAN ]';
+
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      
+      // Draw original image
+      ctx.drawImage(img, 0, 0);
+
+      // Scaled up font size for high-res smartphone photos
+      const fontSize = Math.max(24, Math.floor(img.width / 35));
+      ctx.font = `bold ${fontSize}px Arial`;
+      ctx.textAlign = "right";
+      
+      const paddingRight = 30;
+      const paddingTop = 30 + fontSize;
+      
+      // 50% transparent white outline (ensures visibility on dark backgrounds)
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.lineWidth = Math.max(2, Math.floor(fontSize / 15));
+      
+      // 50% transparent black text (ensures visibility on light backgrounds)
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; 
+      
+      // Draw Name (Values only)
+      ctx.strokeText(name, img.width - paddingRight, paddingTop);
+      ctx.fillText(name, img.width - paddingRight, paddingTop);
+      
+      // Draw PAN (Values only)
+      ctx.strokeText(pan, img.width - paddingRight, paddingTop + fontSize + 15);
+      ctx.fillText(pan, img.width - paddingRight, paddingTop + fontSize + 15);
+
+      // Save to global variable for the HTML template
+      watermarkedImageData = canvas.toDataURL('image/jpeg', 0.85);
+      
+      // Auto-update the modal live if it is currently open
+      const editor = document.getElementById('inspectionEditor');
+      if (editor && editor.innerHTML.includes('Site / Residence Photograph')) {
+          const imgTag = editor.querySelector('img[src^="data:image"]');
+          if (imgTag) imgTag.src = watermarkedImageData;
+      }
+    };
+    img.src = rawImageSrc;
+  }
+  
+  // Pre-Sanction Inspection Report Logic (Rich Text & New Tab)
+  function openInspectionModal() {
+    const name = document.getElementById('i_name').value || '[ Applicant Name ]';
+    const firm = document.getElementById('i_firm').value || '';
+    const consti = document.getElementById('i_const').value || '[ Constitution ]';
+    const route = document.getElementById('i_activity').value || '[ Activity / Retail / Services ]';
+    const address = document.getElementById('i_address').value || '[ Full Address ]';
+    const aadhaar = document.getElementById('i_aadhaar').value || '[Aadhaar Redacted]';
+    const pan = document.getElementById('i_pan').value || '[ PAN ]';
+    const udyam = document.getElementById('i_udyam').value || '';
+    
+    const cost = parseInt(document.getElementById('i_cost').value) || 0;
+    const loan = parseInt(document.getElementById('i_loan').value) || 0;
+    
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.');
+    const nameLine = firm ? `${name} (M/s ${firm})` : name;
+    
+    // HTML formatted observations
+    let obsText = `<b>Applicant:</b> ${name}<br><b>Aadhar:</b> ${aadhaar}<br><b>PAN:</b> ${pan}<br>`;
+    if(udyam) obsText += `<b>URN:</b> ${udyam}<br>`;
+    obsText += `<br>The applicant ${name} is residing/operating at ${address}. The applicant has been in the line of activity for a few years. The unit is engaged in ${route}. The applicant has approached the branch for a facility of Rs. ${fmt(loan)}/- against a total project cost of Rs. ${fmt(cost)}/-.`;
+
+    const htmlTemplate = `
+      <div style="font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #000;">
+        <h3 style="text-align: center; text-decoration: underline; margin-bottom: 20px;">Pre-Sanction Survey Report</h3>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+            <tr><td style="width: 25%; padding-bottom: 5px;">1. Name of the applicant</td><td style="padding-bottom: 5px;">: <b>${nameLine}</b></td></tr>
+            <tr><td style="padding-bottom: 5px;">2. Constitution</td><td style="padding-bottom: 5px;">: ${consti}</td></tr>
+            <tr><td style="padding-bottom: 5px;">3. Activity</td><td style="padding-bottom: 5px;">: ${route}</td></tr>
+        </table>
+
+        <p><b>4. A. Details of places visited (Registered office / Corporate Office / Factory site / Project site / Godown / Warehouse / Residence / Collateral security etc.,)</b></p>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;" border="1">
+            <tr style="font-weight: bold; background-color: #f9fafb;">
+                <td style="padding: 8px; text-align: center;">S No.</td>
+                <td style="padding: 8px;">Place</td>
+                <td style="padding: 8px;">Type (Office / Factory / Project site / Godown / Residence / Other security etc.,)</td>
+                <td style="padding: 8px;">Date of visit</td>
+                <td style="padding: 8px;">Remarks / Observations</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; text-align: center;">1</td>
+                <td style="padding: 8px;">${address}</td>
+                <td style="padding: 8px;">Unit / Residence</td>
+                <td style="padding: 8px;">${dateStr}</td>
+                <td style="padding: 8px;">The inspection was carried out at the premises.</td>
+            </tr>
+        </table>
+
+        <p><b>4. B. Affix photograph of Site / Residence from Pratham / RM app / Other:</b></p>
+        <p style="margin-bottom: 20px;">Photo enclosed.</p>
+
+        <p><b>5. Details of documents collected and verified during pre-sanction survey, if any:</b><br>
+        EB Bill<br>
+        Property Tax / Rental Agreement</p>
+
+        <p><b>6. Observation & finding of visiting officials regarding activity level of the unit, project status (if applicable) in case unit / site visited, promoters and other parameters:</b><br>
+        ${obsText}</p>
+
+        <br><br><br>
+        <div style="text-align: right;">
+            <p><b>Deputy Manager,</b><br>SMEC Tiruchirappalli.<br>${dateStr}</p>
+        </div>
+
+        ${watermarkedImageData ? `
+        <div style="page-break-before: always; text-align: center; padding-top: 20px;">
+            <h3 style="text-decoration: underline; margin-bottom: 20px;">Site / Residence Photograph</h3>
+            <img src="${watermarkedImageData}" style="max-width: 100%; max-height: 950px; border: 2px solid #cbd5e1;" />
+        </div>
+        ` : ''}
+      </div>
+    `;
+
+    document.getElementById('inspectionEditor').innerHTML = htmlTemplate;
+    document.getElementById('inspectionModal').style.display = 'flex';
+  }
+
+  function closeInspectionModal() {
+    document.getElementById('inspectionModal').style.display = 'none';
+  }
+
+  function openFormattedTab() {
+    const editorContent = document.getElementById('inspectionEditor').innerHTML;
+    const newWin = window.open('', '_blank');
+    
+    newWin.document.write(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>Pre-Sanction Survey Report</title>
+        <style>
+          body { padding: 40px; max-width: 900px; margin: 0 auto; background: white; }
+          @media print {
+            body { padding: 0; max-width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+          }
+          .print-btn { 
+            background: #2563eb; color: white; border: none; padding: 10px 20px; 
+            font-size: 14px; border-radius: 6px; cursor: pointer; margin-bottom: 20px; font-weight: bold;
+          }
+          .print-btn:hover { background: #1d4ed8; }
+        </style>
+      </head>
+      <body>
+        <div class="no-print" style="text-align: right; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 20px;">
+            <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+        </div>
+        ${editorContent}
+      </body>
+      </html>
+    `);
+    
+    newWin.document.close();
+    closeInspectionModal();
   }
 
   // Initialize
