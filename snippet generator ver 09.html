@@ -6,6 +6,8 @@
 <title>Loan Appraisal Prompt &amp; Snippet Studio</title>
 <!-- ADD THIS LINE TO LOAD CHART.JS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- EXIF Metadata Parser Library -->
+<script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 <style>
   :root {
     --ink: #0f172a; --ink-soft: #475569; --bg: #f8fafc; --surface: #ffffff;
@@ -65,6 +67,11 @@
   .copy-table td { cursor: pointer; transition: background 0.15s; }
   .copy-table td:hover { background: #e0f2fe; }
   .copy-table td:active { background: #bae6fd; }
+  .funding-breakdown { display: grid; gap: 4px; margin-top: 8px; }
+  .funding-item { display: grid; grid-template-columns: 14px 1fr auto; align-items: center; gap: 7px; padding: 4px 6px; border-radius: 4px; cursor: pointer; text-align: left; background: transparent; border: 0; color: var(--ink); font-size: 0.72rem; }
+  .funding-item:hover, .funding-item:focus-visible { background: #e2e8f0; outline: none; }
+  .funding-swatch { width: 12px; height: 12px; border-radius: 2px; }
+  .funding-amount { font-weight: 700; white-space: nowrap; }
 
   /* Modal */
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 100; }
@@ -94,7 +101,7 @@
   <div class="panel">
     <div class="panel-title">Proposal Inputs</div>
 
-    <div class="sec-heading">1. Applicant &amp; Entity Profile</div>
+    <div class="sec-heading">1. Applicant Profile</div>
     <div class="form-group"><label>Applicant Name</label><input type="text" id="i_name" value=""></div>
     <div class="form-row-3">
       <div class="form-group"><label>Constitution</label><input type="text" id="i_const" value=""></div>
@@ -108,21 +115,51 @@
       <div class="form-group"><label>Dependents</label><input type="number" id="i_dependents" placeholder="0" min="0" value=""></div>
     </div>
     <div class="form-row-3">
-      <div class="form-group"><label>CIBIL Score</label><input type="text" id="i_cibil" value=""></div>
-      <div class="form-group"><label>CIBIL Control No</label><input type="text" id="i_cibil_ctrl" placeholder="Control Number" value=""></div>
-      <div class="form-group"><label>CIBIL Taken Date</label><input type="text" id="i_cibil_date" placeholder="DD/MM/YYYY" value=""></div>
+      <div class="form-group"><label>CIBIL / CRIF Score</label><input type="text" id="i_cibil" value=""></div>
+      <div class="form-group"><label>CIBIL / CRIF Control No.</label><input type="text" id="i_cibil_ctrl" placeholder="Control Number" value=""></div>
+      <div class="form-group"><label>CIBIL / CRIF Taken Date</label><input type="text" id="i_cibil_date" placeholder="DD/MM/YYYY" value=""></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Banking with us since (CBS Customer Creation Date)</label><input type="text" id="i_banking_since" placeholder="DD/MM/YYYY"></div>
+      <div class="form-group"><label>CIF Number (CBS)</label><input type="text" id="i_cif" value=""></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Educational Qualifications</label><input type="text" id="i_education" value=""></div>
+      <div class="form-group">
+        <label>Business Premises</label>
+        <select id="i_business_premises">
+          <option value="">— Select —</option>
+          <option>Own</option>
+          <option>Rented</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label>Marital Status</label>
+        <select id="i_marital_status">
+          <option value="">— Select —</option>
+          <option>Single</option>
+          <option>Married</option>
+          <option>Widowed</option>
+          <option>Divorced</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Name of the Spouse</label><input type="text" id="i_spouse" value=""></div>
     </div>
     <div class="form-group"><label>Full Address / Location</label><input type="text" id="i_address" value=""></div>
 
     <div class="sec-heading">2. Registration &amp; Credentials</div>
     <div class="form-row">
-      <div class="form-group"><label>Commencement Date</label><input type="text" id="i_comm_date" placeholder="DD/MM/YYYY" value=""></div>
-      <div class="form-group"><label>Udyam Reg. No</label><input type="text" id="i_udyam" placeholder="UDYAM-XX-XX-XXXXXXX" value=""></div>
+      <div class="form-group"><label>Registering Authority</label><input type="text" id="i_registering_authority" value="MSME"></div>
+      <div class="form-group"><label>Udyam Registration No.</label><input type="text" id="i_udyam" placeholder="UDYAM-XX-XX-XXXXXXX" value=""></div>
     </div>
-    <div class="form-row">
+    <div class="form-row-3">
+      <div class="form-group"><label>Date of Incorporation</label><input type="text" id="i_incorporation_date" placeholder="DD/MM/YYYY" value=""></div>
+      <div class="form-group"><label>Date of Commencement of Business</label><input type="text" id="i_comm_date" placeholder="DD/MM/YYYY" value=""></div>
       <div class="form-group"><label>Reg. Certification Date</label><input type="text" id="i_reg_cert_date" placeholder="DD/MM/YYYY" value=""></div>
-      <div class="form-group"><label>Aadhaar No</label><input type="text" id="i_aadhaar" placeholder="XXXX XXXX XXXX" value=""></div>
     </div>
+    <div class="form-group"><label>Aadhaar No</label><input type="text" id="i_aadhaar" placeholder="XXXX XXXX XXXX" value=""></div>
     <div class="form-row">
       <div class="form-group"><label>PAN</label><input type="text" id="i_pan" placeholder="ABCDE1234F" value=""></div>
       <div class="form-group"><label>Driving Licence (DL No)</label><input type="text" id="i_dl" placeholder="DL Number" value=""></div>
@@ -198,16 +235,16 @@
       <div class="form-group"><label>Borrower Margin (₹)</label><input type="number" id="i_margin_amt" value=""></div>
       <div class="form-group"><label>Tenor / Morat (M)</label><input type="text" id="i_tenor" placeholder="84 / 3" value=""></div>
     </div>
-
     <div class="sec-heading">5. Asset Details &amp; Operational Benchmarks</div>
     <div class="form-group"><label>Asset Details</label><input type="text" id="i_asset" value=""></div>
     <div class="form-row-3">
-      <div class="form-group"><label>Asset Cost (₹)</label><input type="number" id="i_cost" value=""></div>
+      <div class="form-group"><label>Total Project Cost (₹) — calculated</label><input type="number" id="i_cost" value="" readonly></div>
       <div class="form-group"><label>Dealer</label><input type="text" id="i_dealer" value=""></div>
       <div class="form-group"><label>Dealer GST No.</label><input type="text" id="i_gst" placeholder="" value=""></div>
     </div>
 
     <div class="form-group"><label>Business/Route Nature</label><input type="text" id="i_route" value=""></div>
+    <div class="form-group"><label>Monthly Sustenance / Drawings (₹)</label><input type="number" id="i_sustenance" min="0" value="10000"></div>
 
     <!-- Grouped 3 Boxes: Operations, Freight Realization & Scenario Slider -->
     <div style="background:#f1f5f9; padding:12px; border-radius:6px; margin-bottom:10px; border:1px solid var(--border);">
@@ -242,10 +279,20 @@
       </div>
     </div>
     
-    <div class="sec-heading">6. Pre-Sanction Attachments</div>
+    <div class="sec-heading">6. Pre-Sanction Attachments &amp; Inspection Meta</div>
     <div class="form-group">
       <label>Upload Site/Residence Collage</label>
       <input type="file" id="i_photo" accept="image/*" onchange="processWatermark(event)">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Inspection Date</label>
+        <input type="date" id="i_insp_date">
+      </div>
+      <div class="form-group">
+        <label>GPS Coordinates / Location</label>
+        <input type="text" id="i_gps" placeholder="e.g. 10.7905° N, 78.7047° E" value="">
+      </div>
     </div>
     
   </div>
@@ -355,8 +402,32 @@
             <td>Dependents</td><td class="copyable-cell" id="td_dependents" onclick="copyCell(this)">-</td>
           </tr>
           <tr>
-            <td>Commencement Date</td><td class="copyable-cell" id="td_comm_date" onclick="copyCell(this)">-</td>
+            <td>CIF Number</td><td class="copyable-cell" id="td_cif" onclick="copyCell(this)">-</td>
+            <td>Banking with us since</td><td class="copyable-cell" id="td_banking_since" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td>CIBIL / CRIF Score</td><td class="copyable-cell" id="td_cibil" onclick="copyCell(this)">-</td>
+            <td>CIBIL / CRIF Control No.</td><td class="copyable-cell" id="td_cibil_ctrl" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td>Educational Qualifications</td><td class="copyable-cell" id="td_education" onclick="copyCell(this)">-</td>
+            <td>Business Premises</td><td class="copyable-cell" id="td_business_premises" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td>Marital Status</td><td class="copyable-cell" id="td_marital_status" onclick="copyCell(this)">-</td>
+            <td>Name of the Spouse</td><td class="copyable-cell" id="td_spouse" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td>Registering Authority</td><td class="copyable-cell" id="td_registering_authority" onclick="copyCell(this)">-</td>
+            <td>CIBIL / CRIF Taken Date</td><td class="copyable-cell" id="td_cibil_date" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
+            <td>Date of Incorporation</td><td class="copyable-cell" id="td_incorporation_date" onclick="copyCell(this)">-</td>
+            <td>Date of Commencement of Business</td><td class="copyable-cell" id="td_comm_date" onclick="copyCell(this)">-</td>
+          </tr>
+          <tr>
             <td>Reg. Certification Date</td><td class="copyable-cell" id="td_reg_date" onclick="copyCell(this)">-</td>
+            <td></td><td></td>
           </tr>
           <tr>
             <td colspan="4" style="background:#f8fafc; font-weight:bold; color:var(--accent); padding:6px 8px;">Sub-table: Address & Contact Details</td>
@@ -416,15 +487,15 @@
       <div id="out_l_text" style="display:none;"></div>
     </div>
 
-    <!-- SECTION F2: NEED FOR ACQUISITION TEXT TEMPLATES -->
-    <div class="snippet-card">
-      <h3>Section (F2): Need for the acquisition of Land/Building/Machinery/Equipment/Vehicle <span style="font-size:0.75rem; font-weight:normal; color:var(--ink-soft);">(Click any cell to copy)</span></h3>
-      <table class="copy-table">
-        <tbody id="out_f2_dynamic">
-          <!-- Populated dynamically by JS -->
-        </tbody>
-      </table>
-    </div>
+      <!-- SECTION F2: NEED FOR ACQUISITION TEXT TEMPLATES -->
+      <div class="snippet-card">
+        <h3>Section (F2): Need for the acquisition of Land/Building/Machinery/Equipment/Vehicle <span style="font-size:0.75rem; font-weight:normal; color:var(--ink-soft);">(Click any cell to copy)</span></h3>
+        <table class="copy-table">
+          <tbody id="out_f2_dynamic">
+            <!-- Populated dynamically by JS -->
+          </tbody>
+        </table>
+      </div>
 
     <!-- SECTION H: MORATORIUM JUSTIFICATION -->
     <div class="snippet-card">
@@ -478,7 +549,7 @@
     <!-- SECTION M: MONTHLY TRANSPORT CALCULATION SHEET -->
     <div class="snippet-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <h3 style="margin:0;">Section (M): Transport Calculation Sheet &amp; M2 Abstract</h3>
+        <h3 style="margin:0;">Section (M): Transport Calculation Sheet &amp; Monthly Unit Economics Abstract (M2)</h3>
         <button class="copy-btn" onclick="copyId('calc_sheet_wrap', this)">📋 Copy Both Tables</button>
       </div>
 
@@ -501,7 +572,7 @@
               <!-- EXPENSES SECTION -->
               <tr style="background:#e9d5ff;"><td>5</td><td>Cost of Fuel per litre</td><td id="t_fuel_price" style="text-align:right;">-</td></tr>
               <tr style="background:#e9d5ff;"><td>6</td><td>Quantity of fuel required per month (Liters)</td><td id="t_fuel_qty" style="text-align:right;">-</td></tr>
-              <tr style="background:#e9d5ff;"><td>7</td><td>Cost of fuel per month (Column 5 * Column 6)</td><td id="t_fuel_cost" style="text-align:right;">-</td></tr>
+              <tr style="background:#fef3c7; font-weight:bold;"><td>7</td><td>Calculated cost of fuel per month (Column 5 × Column 6)</td><td id="t_fuel_cost" style="text-align:right;">-</td></tr>
               <tr style="background:#e9d5ff;"><td>8</td><td>Monthly Wages / bhatta for driver / cleaner etc.</td><td id="t_wages" style="text-align:right;">-</td></tr>
               <tr style="background:#e9d5ff;"><td>9</td><td>Maintenance &amp; Repair</td><td id="t_maint" style="text-align:right;">-</td></tr>
               <tr style="background:#e9d5ff;"><td>10</td><td>Insurance (annual premium / 12) &amp; Taxes</td><td id="t_ins" style="text-align:right;">-</td></tr>
@@ -533,7 +604,7 @@
               <tr style="background:#e9d5ff;"><td>B.</td><td colspan="2" style="font-weight:bold;">Monthly Expenses</td></tr>
               <tr style="background:#e9d5ff;"><td></td><td style="padding-left:12px;">i) Raw Materials / Fuel</td><td id="m2_raw" style="text-align:right;">-</td></tr>
               <tr style="background:#e9d5ff;"><td></td><td style="padding-left:12px;">ii) Wages / Salaries</td><td id="m2_wages" style="text-align:right;">-</td></tr>
-              <tr style="background:#e9d5ff;"><td></td><td style="padding-left:12px;">iii) Drawings / Sustenance</td><td id="m2_drawings" style="text-align:right;">-</td></tr>
+              <tr style="background:#e9d5ff;"><td></td><td style="padding-left:12px;">iii) Monthly Sustenance / Drawings</td><td id="m2_drawings" style="text-align:right;">-</td></tr>
               <tr style="background:#e9d5ff;"><td></td><td style="padding-left:12px;">iv) Other (Maint, Ins, Int)</td><td id="m2_other" style="text-align:right;">-</td></tr>
               <tr style="background:#d8b4fe; font-weight:bold;"><td>C.</td><td>Total Expenses (i to iv)</td><td id="m2_total_exp" style="text-align:right;">-</td></tr>
               <tr style="background:#bbf7d0; font-weight:bold;"><td>D.</td><td>Monthly Surplus (A - C)</td><td id="m2_surplus" style="text-align:right;">-</td></tr>
@@ -563,12 +634,16 @@
                 <tr><td style="width:45%; font-weight:bold;">Borrower Name</td><td id="f_name">-</td></tr>
                 <tr><td style="font-weight:bold;">Scheme</td><td id="f_scheme">-</td></tr>
                 <tr><td style="font-weight:bold;">Asset Name</td><td id="f_asset">-</td></tr>
-                <tr><td style="font-weight:bold;">Total Project Cost (₹)</td><td id="f_cost">-</td></tr>
-                <tr><td style="font-weight:bold;">Borrower Margin</td><td id="f_margin">-</td></tr>
-                <tr><td style="font-weight:bold;">Eligible Govt Subsidy</td><td id="f_subsidy">-</td></tr>
-                <tr><td style="font-weight:bold;">Net Term Loan</td><td id="f_loan" style="font-weight:bold; color:var(--accent);">-</td></tr>
+                <tr><td style="font-weight:bold;">Dealer</td><td id="f_dealer">-</td></tr>
+                <tr><td style="font-weight:bold;">Dealer GST No.</td><td id="f_gst">-</td></tr>
+                <tr><td style="font-weight:bold;">Total Project Cost (1 = 2 + 3 + 4) (₹)</td><td id="f_cost">-</td></tr>
+                <tr><td style="font-weight:bold;">Borrower Margin (2)</td><td id="f_margin">-</td></tr>
+                <tr><td style="font-weight:bold;">Eligible Subsidy (3)</td><td id="f_subsidy">-</td></tr>
+                <tr><td style="font-weight:bold;">Net Term Loan (4)</td><td id="f_loan" style="font-weight:bold; color:var(--accent);">-</td></tr>
                 <tr><td style="font-weight:bold;">Interest Rate p.a.</td><td id="f_roi">-</td></tr>
                 <tr><td style="font-weight:bold;">Tenure (Months)</td><td id="f_tenor">-</td></tr>
+                <tr><td style="font-weight:bold;">Moratorium (Months)</td><td id="f_morat">-</td></tr>
+                <tr><td style="font-weight:bold;">EMI Amount (₹)</td><td id="f_emi" style="font-weight:bold; color:var(--accent);">-</td></tr>
               </tbody>
             </table>
           </div>
@@ -580,6 +655,7 @@
               <div style="position: relative; height: 230px; width: 100%;">
                 <canvas id="costChart"></canvas>
               </div>
+              <div id="fundingBreakdown" class="funding-breakdown" aria-label="Project funding values; click an item to copy its amount"></div>
             </div>
             
             <!-- Chart 2: Loan vs Total Payable -->
@@ -701,6 +777,23 @@
     return val ? val : `[ ${placeholder} ]`;
   }
 
+  function calculateEmiAmount(loan, roi, tenure, moratorium) {
+    const repaymentMonths = Math.max(1, tenure - moratorium);
+    const ratePerMonth = (roi / 100) / 12;
+    if (loan <= 0 || ratePerMonth <= 0) return 0;
+    const factor = Math.pow(1 + ratePerMonth, repaymentMonths);
+    return loan * ratePerMonth * factor / (factor - 1);
+  }
+
+  function syncTotalProjectCost() {
+    const loan = parseFloat(document.getElementById('i_loan').value) || 0;
+    const subsidy = parseFloat(document.getElementById('i_sub_amt').value) || 0;
+    const margin = parseFloat(document.getElementById('i_margin_amt').value) || 0;
+    const totalProjectCost = loan + subsidy + margin;
+    document.getElementById('i_cost').value = totalProjectCost > 0 ? totalProjectCost : '';
+    return totalProjectCost;
+  }
+
   // Calculate age from DD/MM/YYYY or YYYY-MM-DD string
   function computeAge(dobStr) {
     if (!dobStr) return '';
@@ -772,7 +865,7 @@
   }
 
   function calculateFinancials() {
-    const loan = parseInt(document.getElementById('i_loan').value) || 0;
+    const loan = parseFloat(document.getElementById('i_loan').value) || 0;
     const roi = parseFloat(document.getElementById('i_roi').value) || 9.65;
     
     // Parse Tenor and Moratorium (Synced with M1/M2)
@@ -783,7 +876,7 @@
     let repaymentMonths = tenure - morat;
     if (repaymentMonths <= 0) repaymentMonths = 1;
 
-    const cost = parseInt(document.getElementById('i_cost').value) || 0;
+    const cost = parseFloat(document.getElementById('i_cost').value) || 0;
     
     const dailyKm = parseFloat(document.getElementById('i_daily_km').value) || 0;
     const opDays = parseFloat(document.getElementById('i_op_days').value) || 0;
@@ -897,6 +990,44 @@
     const repayCtx = document.getElementById('repayChart');
     if (!costCtx || !repayCtx) return; // Prevent crashes if HTML isn't loaded
 
+    const fundingSources = [
+      { label: 'Bank Finance', value: loan, color: '#3b82f6' },
+      { label: 'Govt Subsidy', value: subAmt, color: '#a855f7' },
+      { label: 'Own Contribution', value: margin, color: '#22c55e' }
+    ];
+    const fundingBreakdown = document.getElementById('fundingBreakdown');
+    if (fundingBreakdown) {
+      fundingBreakdown.innerHTML = fundingSources.map(source => {
+        const percentage = cost > 0 ? (source.value / cost) * 100 : 0;
+        const amount = source.value.toLocaleString('en-IN');
+        return `<button type="button" class="funding-item" onclick="copyText('${source.value}', this)" title="Click to copy ₹${amount}">
+          <span class="funding-swatch" style="background:${source.color};"></span>
+          <span>${source.label} · ${percentage.toFixed(1)}%</span>
+          <span class="funding-amount">₹${amount}</span>
+        </button>`;
+      }).join('');
+    }
+
+    const fundingLabelsPlugin = {
+      id: 'fundingLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        ctx.save();
+        ctx.font = 'bold 10px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        chart.data.datasets.forEach((dataset, index) => {
+          const bar = chart.getDatasetMeta(index).data[0];
+          if (!bar || !dataset.data[0]) return;
+          const { x, y, width } = bar.getProps(['x', 'y', 'width'], true);
+          if (width < 58) return;
+          ctx.fillStyle = index === 2 ? '#0f172a' : '#ffffff';
+          ctx.fillText(`₹${Number(dataset.data[0]).toLocaleString('en-IN')}`, x, y, Math.max(0, width - 8));
+        });
+        ctx.restore();
+      }
+    };
+
     // CHART 1: Single Horizontal Stacked Bar for 100% Project Cost
     costChartInstance = new Chart(costCtx.getContext('2d'), {
       type: 'bar',
@@ -923,14 +1054,30 @@
               }
             }
           },
-          legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+          legend: { display: false }
         },
         scales: {
           x: { stacked: true, display: false }, // Hide axis line for cleaner UI
           y: { stacked: true, display: false }
         }
-      }
+      },
+      plugins: [fundingLabelsPlugin]
     });
+    costCtx.onclick = event => {
+      const rect = costCtx.getBoundingClientRect();
+      const chartX = (event.clientX - rect.left) * costChartInstance.width / rect.width;
+      const chartY = (event.clientY - rect.top) * costChartInstance.height / rect.height;
+      const clickedSegment = costChartInstance.data.datasets.findIndex((dataset, index) => {
+        const bar = costChartInstance.getDatasetMeta(index).data[0];
+        if (!bar) return false;
+        const { x, base, y, height } = bar.getProps(['x', 'base', 'y', 'height'], true);
+        return chartX >= Math.min(x, base) && chartX <= Math.max(x, base)
+          && chartY >= y - height / 2 && chartY <= y + height / 2;
+      });
+      if (clickedSegment < 0) return;
+      const value = costChartInstance.data.datasets[clickedSegment].data[0];
+      copyText(String(value));
+    };
 
     // CHART 2: Vertical Stacked Bar for Amount Taken vs Total Cost of Borrowing
     repayChartInstance = new Chart(repayCtx.getContext('2d'), {
@@ -971,16 +1118,21 @@
     const computedAge = computeAge(dobStr);
     document.getElementById('i_age_calc').value = computedAge;
 
-    const loan = parseInt(document.getElementById('i_loan').value) || 0;
+    const loan = parseFloat(document.getElementById('i_loan').value) || 0;
     const scheme = document.getElementById('i_scheme').value;
     const schemeAppNo = valOrPlaceholder('i_scheme_app_no', 'scheme application number'); // NEW LINE
     const guar = document.getElementById('i_guar').value;
     const subScheme = document.getElementById('i_sub_scheme').value;
-    const subAmt = parseInt(document.getElementById('i_sub_amt').value) || 0;
-    const margin = parseInt(document.getElementById('i_margin_amt').value) || 0;
+    const subAmt = parseFloat(document.getElementById('i_sub_amt').value) || 0;
+    const margin = parseFloat(document.getElementById('i_margin_amt').value) || 0;
     const tenorStr = document.getElementById('i_tenor').value.split('/');
     const tenor = (tenorStr[0] || "[ tenor ]").trim();
     const morat = (tenorStr[1] || "[ morat ]").trim();
+    const totalProjectCost = syncTotalProjectCost();
+    const tenureMonths = parseInt(tenorStr[0]) || 0;
+    const moratoriumMonths = parseInt(tenorStr[1]) || 0;
+    const roiValue = parseFloat(document.getElementById('i_roi').value) || 0;
+    const emiAmount = calculateEmiAmount(loan, roiValue, tenureMonths, moratoriumMonths);
     
     const name = valOrPlaceholder('i_name', 'Applicant Name');
     const consti = valOrPlaceholder('i_const', 'Individual');
@@ -990,7 +1142,8 @@
     const address = valOrPlaceholder('i_address', 'Address / District');
     const roi = valOrPlaceholder('i_roi', 'ROI');
     
-    const commDate = valOrPlaceholder('i_comm_date', 'commencement date');
+    const incorporationDate = valOrPlaceholder('i_incorporation_date', 'date of incorporation');
+    const commDate = valOrPlaceholder('i_comm_date', 'date of commencement of business');
     const udyam = valOrPlaceholder('i_udyam', 'Udyam Reg. No');
     const regCertDate = valOrPlaceholder('i_reg_cert_date', 'Registration Certification Date');
     const aadhaar = valOrPlaceholder('i_aadhaar', 'Aadhaar No');
@@ -1001,6 +1154,13 @@
     const cibilCtrl = valOrPlaceholder('i_cibil_ctrl', 'Control No');
     const cibilDate = valOrPlaceholder('i_cibil_date', 'CIBIL taken date');
     const experience = valOrPlaceholder('i_experience', 'experience');
+    const cif = valOrPlaceholder('i_cif', 'CIF Number');
+    const bankingSince = valOrPlaceholder('i_banking_since', 'Customer Creation Date');
+    const education = valOrPlaceholder('i_education', 'Educational Qualifications');
+    const businessPremises = valOrPlaceholder('i_business_premises', 'Business Premises');
+    const maritalStatus = valOrPlaceholder('i_marital_status', 'Marital Status');
+    const spouse = valOrPlaceholder('i_spouse', 'Name of the Spouse');
+    const registeringAuthority = valOrPlaceholder('i_registering_authority', 'Registering Authority');
 
     // Contact & Address Details
     const door = valOrPlaceholder('i_door', 'Door/Flat No.');
@@ -1013,7 +1173,7 @@
     const email = valOrPlaceholder('i_email', 'Email');
 
     const asset = valOrPlaceholder('i_asset', 'Commercial Vehicle');
-    const cost = parseInt(document.getElementById('i_cost').value) || 0;
+    const cost = totalProjectCost;
     const dealer = valOrPlaceholder('i_dealer', 'Dealer');
     const gst = valOrPlaceholder('i_gst', 'GST No.');
     const route = valOrPlaceholder('i_route', 'Route Nature');
@@ -1043,7 +1203,7 @@
     document.getElementById('out_eg').innerText = `0.5 percent of the loan amount plus applicable GST.\n\nCalculated Fee (inclusive of GST): Rs. ${fmt(feeAmt)}/-`;
 
     // SECTION F: Borrower Profile Text
-    document.getElementById('out_f').innerText = `${name}, is the proprietor of ${firm} - date of commencement of business - ${commDate} with Udyam Registration No ${udyam}\n\nAadhaar No: ${aadhaar}\nPAN: ${pan}\nDriving Licence: ${dl} with badge No. ${badge} which is valid upto ${dlValidity}\n\nThe applicant has been sanctioned capital subsidy under the ${schemeDisplay} vide application no. ${schemeAppNo} for Rs. ${fmt(subAmt)} for purchase of ${asset}.\n\nIndividual CIBIL (Control No. ${cibilCtrl} dated ${cibilDate}) was verified and credit history was found to be satisfactory with a score of ${cibil} and no overdues. The applicant has been working in the transport sector for the last ${experience} years.\n\nNote: The latest quotation (issued by supplier ${dealer} with GST: ${gst} cross checked with the GST portal) submitted by the borrower has an estimate of Rs. ${fmt(cost)}/- which will be funded by a TL of Rs. ${fmt(loan)}/-, capital subsidy of Rs. ${fmt(subAmt)}/- and the borrower's own contribution of Rs. ${fmt(margin)}/-\n\nThe requirement has been verified and found to be genuine and in line with the activity proposed. The assets to be acquired will be productive in nature and will be hypothecated to the Bank. End-use of funds will be monitored through inspection of the unit and verification of invoices/bills after disbursement.`;
+    document.getElementById('out_f').innerText = `${name}, is the proprietor of ${firm} - Date of Incorporation: ${incorporationDate} - Date of Commencement of Business: ${commDate} with Udyam Registration No ${udyam} (Reg. Certification Date: ${regCertDate})\n\nCIF Number: ${cif}\nBanking with us since: ${bankingSince}\nEducational Qualifications: ${education}\nBusiness Premises: ${businessPremises}\nMarital Status: ${maritalStatus} | Name of the Spouse: ${spouse}\nRegistering Authority: ${registeringAuthority}\n\nAadhaar No: ${aadhaar}\nPAN: ${pan}\nDriving Licence: ${dl} with badge No. ${badge} which is valid upto ${dlValidity}\n\nThe applicant has been sanctioned capital subsidy under the ${schemeDisplay} vide application no. ${schemeAppNo} for Rs. ${fmt(subAmt)} for purchase of ${asset}.\n\nIndividual CIBIL / CRIF (Control No. ${cibilCtrl} dated ${cibilDate}) was verified and credit history was found to be satisfactory with a score of ${cibil} and no overdues. The applicant has been working in the transport sector for the last ${experience} years.\n\nNote: The latest quotation (issued by supplier ${dealer} with GST: ${gst} cross checked with the GST portal) submitted by the borrower has an estimate of Rs. ${fmt(cost)}/- which will be funded by a TL of Rs. ${fmt(loan)}/-, capital subsidy of Rs. ${fmt(subAmt)}/- and the borrower's own contribution of Rs. ${fmt(margin)}/-\n\nThe requirement has been verified and found to be genuine and in line with the activity proposed. The assets to be acquired will be productive in nature and will be hypothecated to the Bank. End-use of funds will be monitored through inspection of the unit and verification of invoices/bills after disbursement.`;
 
     // SECTION K: Quick Copy Table Update
     document.getElementById('td_activity').innerText = document.getElementById('i_activity').value.trim() || '-';
@@ -1054,8 +1214,20 @@
     document.getElementById('td_aadhaar').innerText = document.getElementById('i_aadhaar').value.trim() || '-';
     document.getElementById('td_dob').innerText = dobStr || '-';
     document.getElementById('td_age').innerText = computedAge || '-';
+    document.getElementById('td_incorporation_date').innerText = document.getElementById('i_incorporation_date').value.trim() || '-';
+    document.getElementById('td_comm_date').innerText = document.getElementById('i_comm_date').value.trim() || '-';
     document.getElementById('td_dependents').innerText = document.getElementById('i_dependents').value.trim() || '-';
     document.getElementById('td_udyam').innerText = document.getElementById('i_udyam').value.trim() || '-';
+    document.getElementById('td_cif').innerText = document.getElementById('i_cif').value.trim() || '-';
+    document.getElementById('td_banking_since').innerText = document.getElementById('i_banking_since').value.trim() || '-';
+    document.getElementById('td_cibil').innerText = document.getElementById('i_cibil').value.trim() || '-';
+    document.getElementById('td_cibil_ctrl').innerText = document.getElementById('i_cibil_ctrl').value.trim() || '-';
+    document.getElementById('td_cibil_date').innerText = document.getElementById('i_cibil_date').value.trim() || '-';
+    document.getElementById('td_education').innerText = document.getElementById('i_education').value.trim() || '-';
+    document.getElementById('td_business_premises').innerText = document.getElementById('i_business_premises').value || '-';
+    document.getElementById('td_marital_status').innerText = document.getElementById('i_marital_status').value || '-';
+    document.getElementById('td_spouse').innerText = document.getElementById('i_spouse').value.trim() || '-';
+    document.getElementById('td_registering_authority').innerText = document.getElementById('i_registering_authority').value.trim() || '-';
     document.getElementById('td_reg_date').innerText = document.getElementById('i_reg_cert_date').value.trim() || '-';
     document.getElementById('td_door').innerText = document.getElementById('i_door').value.trim() || '-';
     document.getElementById('td_street').innerText = document.getElementById('i_street').value.trim() || '-';
@@ -1104,15 +1276,19 @@
   **Applicant Profile & Statutory Credentials**
   - Borrower Name & Constitution: ${name} / ${consti}
   - Operating Firm Name: ${firm}
-  - Date of Business Commencement: ${commDate}
+  - Date of Incorporation: ${incorporationDate}
+  - Date of Commencement of Business: ${commDate}
+  - Udyam Registration No: ${udyam} (Registration Authority: ${registeringAuthority}; Certification Date: ${regCertDate})
   - Date of Birth / Calculated Age: ${dobStr || '[ DOB ]'} / ${computedAge || '[ Age ]'} | Dependents: ${dependents}
-  - Udyam Registration No: ${udyam} (Cert Date: ${regCertDate})
+  - CIF Number: ${cif} | Banking with us since: ${bankingSince}
+  - Educational Qualifications: ${education} | Business Premises: ${businessPremises}
+  - Marital Status: ${maritalStatus} | Name of the Spouse: ${spouse}
   - Identity Documents: PAN: ${pan} | Aadhaar: ${aadhaar}
   - Professional Qualifications: Driving Licence No: ${dl} | Commercial Badge: ${badge} | Validity: ${dlValidity}
   - Industry Domain Experience: ${experience} years in transport and logistics
   - Operating Location / District & State: ${address}
   - Contact Details: Mobile: ${mobile} | Email: ${email}
-  - Individual CIBIL Score & Track Record: ${cibil} (Control No: ${cibilCtrl}), nil overdues
+  - Individual CIBIL / CRIF Score & Track Record: ${cibil} (Control No: ${cibilCtrl}, dated ${cibilDate}), nil overdues
 
   **Asset, Quotation & Proposed Financing**
   - Proposed Asset / Vehicle Model: ${asset}
@@ -1166,12 +1342,16 @@
     document.getElementById('f_name').innerText = document.getElementById('i_name').value || '-';
     document.getElementById('f_scheme').innerText = document.getElementById('i_scheme').value || '-';
     document.getElementById('f_asset').innerText = document.getElementById('i_asset').value || '-';
+    document.getElementById('f_dealer').innerText = document.getElementById('i_dealer').value || '-';
+    document.getElementById('f_gst').innerText = document.getElementById('i_gst').value || '-';
     document.getElementById('f_cost').innerText = cost > 0 ? fmt(cost) : '-';
     document.getElementById('f_margin').innerText = cost > 0 ? `Rs. ${fmt(margin)} (${((margin/cost)*100).toFixed(1)}%)` : '-';
     document.getElementById('f_subsidy').innerText = subAmt > 0 ? fmt(subAmt) : '-';
     document.getElementById('f_loan').innerText = loan > 0 ? fmt(loan) : '-';
     document.getElementById('f_roi').innerText = (document.getElementById('i_roi').value || '0') + '%';
     document.getElementById('f_tenor').innerText = (tenorStr[0] || '0') + ' months';
+    document.getElementById('f_morat').innerText = (tenorStr[1] || '0') + ' months';
+    document.getElementById('f_emi').innerText = emiAmount > 0 ? fmt(Math.round(emiAmount)) : '-';
 
     const fin = calculateFinancials();
     
@@ -1224,7 +1404,7 @@
       ${tr('Closing Loan Balance', fin.yBal, '#f1f5f9')}
     `;
 
-
+      
     // SECTION F2: Dynamic Need for Acquisition Text
     document.getElementById('out_f2_dynamic').innerHTML = `
       <tr><td title="Capacity expansion (existing unit)">The applicant is presently carrying on the activity of [trade/business] on a small scale using [old/manual/rented] equipment, resulting in limited output and inability to meet growing customer demand. Acquisition of ${asset} is essential to enhance production capacity, improve quality/finish of output, reduce turnaround time, and thereby increase turnover and profitability of the unit.</td></tr>
@@ -1260,7 +1440,7 @@
       </tr>
     `;
 
-    
+
     // Update watermark dynamically if an image is already loaded
     if (typeof applyWatermark === "function") applyWatermark();
     // Call the newly added educational calculation sheet function
@@ -1274,7 +1454,7 @@
       const txt = e.target.innerText.trim();
       // Ignore clicks on empty cells, placeholder dashes, or sub-table headers
       if (!txt || txt === '-' || e.target.colSpan > 1) return; 
-      copyText(txt, e.target);
+      copyText(normalizeRupeeCellText(txt), e.target);
     }
   });
 
@@ -1298,7 +1478,11 @@
   function copyCell(td) {
     const txt = td.innerText.trim();
     if(!txt || txt === '-') return;
-    copyText(txt, td);
+    copyText(normalizeRupeeCellText(txt), td);
+  }
+
+  function normalizeRupeeCellText(text) {
+    return text.replace(/₹|\bRs\.?\s*/gi, '').replace(/,/g, '').replace(/\/-\s*$/, '');
   }
 
   function copyId(elementId, btnElement) {
@@ -1382,6 +1566,12 @@
 
     const cbsName = getField(['customer name', 'account name', 'name']);
     if(cbsName) document.getElementById('i_name').value = cbsName;
+
+    const cifNumber = getField(['cif number', 'cif no', 'customer information file number']);
+    if(cifNumber) document.getElementById('i_cif').value = cifNumber;
+
+    const customerCreationDate = getField(['customer creation date', 'customer created date', 'creation date']);
+    if(customerCreationDate) document.getElementById('i_banking_since').value = customerCreationDate;
     
     const cbsLoan = getField(['sanctioned limit', 'application amount', 'approved amount', 'limit']);
     if(cbsLoan) document.getElementById('i_loan').value = cbsLoan.replace(/,/g, '');
@@ -1435,10 +1625,49 @@
       return; 
     }
     
+    // 1. EXTRACT EXIF METADATA (Date & GPS Coordinates) using exif-js
+    EXIF.getData(file, function() {
+      // Extract Inspection Date
+      const dateTimeOriginal = EXIF.getTag(this, "DateTimeOriginal");
+      if (dateTimeOriginal) {
+        // Converts "2026:09:24 17:57:52" -> "2026-09-24" for HTML date inputs
+        const parts = dateTimeOriginal.split(' ')[0].split(':');
+        if (parts.length === 3) {
+          document.getElementById('i_insp_date').value = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        }
+      }
+
+      // Extract GPS Latitude & Longitude from EXIF arrays
+      const lat = EXIF.getTag(this, "GPSLatitude");
+      const latRef = EXIF.getTag(this, "GPSLatitudeRef") || "N";
+      const lon = EXIF.getTag(this, "GPSLongitude");
+      const lonRef = EXIF.getTag(this, "GPSLongitudeRef") || "E";
+
+      if (lat && lon) {
+        // Helper to convert EXIF rational arrays [ [deg, 1], [min, 1], [sec, 1000000] ] to Decimal Degrees
+        const parseCoord = (dmsArray) => {
+          if (!Array.isArray(dmsArray) || dmsArray.length < 3) return 0;
+          const deg = dmsArray[0][0] / dmsArray[0][1];
+          const min = dmsArray[1][0] / dmsArray[1][1];
+          const sec = dmsArray[2][0] / dmsArray[2][1];
+          return deg + (min / 60) + (sec / 3600);
+        };
+
+        const latitude = parseCoord(lat).toFixed(6);
+        const longitude = parseCoord(lon).toFixed(6);
+
+        // Automatically populate the GPS input box in your form
+        document.getElementById('i_gps').value = `${latitude}° ${latRef}, ${longitude}° ${lonRef}`;
+      } else {
+        document.getElementById('i_gps').value = "No GPS metadata found in image.";
+      }
+    });
+
+    // 2. READ IMAGE FILE FOR WATERMARK PREVIEW
     const reader = new FileReader();
     reader.onload = function(e) {
       rawImageSrc = e.target.result;
-      applyWatermark(); // Apply watermark immediately upon upload
+      applyWatermark(); // Apply watermark preview instantly
     };
     reader.readAsDataURL(file);
   }
@@ -1497,6 +1726,7 @@
   }
   
   // Pre-Sanction Inspection Report Logic (Rich Text & New Tab)
+  // Pre-Sanction Inspection Report Logic (Rich Text & New Tab)
   function openInspectionModal() {
     const name = document.getElementById('i_name').value || '[ Applicant Name ]';
     const firm = document.getElementById('i_firm').value || '';
@@ -1510,8 +1740,21 @@
     const cost = parseInt(document.getElementById('i_cost').value) || 0;
     const loan = parseInt(document.getElementById('i_loan').value) || 0;
     
-    const today = new Date();
-    const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.');
+    // Read editable inspection date (default to today if empty)
+    const rawInspDate = document.getElementById('i_insp_date').value;
+    let dateStr = "";
+    if (rawInspDate) {
+      const p = rawInspDate.split('-'); // Convert YYYY-MM-DD to DD.MM.YYYY
+      if (p.length === 3) dateStr = `${p[2]}.${p[1]}.${p[0]}`;
+      else dateStr = rawInspDate;
+    } else {
+      const today = new Date();
+      dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.');
+    }
+
+    // Read GPS / Geospatial Metadata
+    const gpsCoord = document.getElementById('i_gps').value.trim() || '[ GPS Coordinates / Geo-tag Not Provided ]';
+
     const nameLine = firm ? `${name} (M/s ${firm})` : name;
     
     // HTML formatted observations
@@ -1533,14 +1776,17 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;" border="1">
             <tr style="font-weight: bold; background-color: #f9fafb;">
                 <td style="padding: 8px; text-align: center;">S No.</td>
-                <td style="padding: 8px;">Place</td>
+                <td style="padding: 8px;">Place &amp; Geo-Coordinates</td>
                 <td style="padding: 8px;">Type (Office / Factory / Project site / Godown / Residence / Other security etc.,)</td>
                 <td style="padding: 8px;">Date of visit</td>
                 <td style="padding: 8px;">Remarks / Observations</td>
             </tr>
             <tr>
                 <td style="padding: 8px; text-align: center;">1</td>
-                <td style="padding: 8px;">${address}</td>
+                <td style="padding: 8px;">
+                  ${address}<br>
+                  <small style="color: #2563eb; font-weight: bold;">📍 GPS: ${gpsCoord}</small>
+                </td>
                 <td style="padding: 8px;">Unit / Residence</td>
                 <td style="padding: 8px;">${dateStr}</td>
                 <td style="padding: 8px;">The inspection was carried out at the premises.</td>
@@ -1676,7 +1922,8 @@
     const wages = 15000; 
     const maintenance = 7500;
     const insuranceAndTax = 4000;
-    const sustenanceDrawings = 10000; 
+    const sustenanceInput = document.getElementById('i_sustenance').value;
+    const sustenanceDrawings = sustenanceInput === '' ? 10000 : (parseFloat(sustenanceInput) || 0);
 
     // 4. LOAN MATH (EMI adjusted for Moratorium)
     const ratePM = (roi / 100) / 12;
@@ -1711,8 +1958,9 @@
     document.getElementById('t_revenue').innerText = Math.round(totalRevenue).toLocaleString('en-IN');
     
     document.getElementById('t_fuel_price').innerText = fuelPrice;
-    document.getElementById('t_fuel_qty').innerText = Math.round(fuelQty);
-    document.getElementById('t_fuel_cost').innerText = Math.round(fuelCost).toLocaleString('en-IN');
+    document.getElementById('t_fuel_qty').innerText = fuelQty.toLocaleString('en-IN', { maximumFractionDigits: 6 });
+    const displayedFuelCost = Math.round(fuelCost).toLocaleString('en-IN');
+    document.getElementById('t_fuel_cost').innerText = displayedFuelCost;
     
     document.getElementById('t_wages').innerText = wages.toLocaleString('en-IN');
     document.getElementById('t_maint').innerText = maintenance.toLocaleString('en-IN');
@@ -1731,7 +1979,7 @@
     // 7. INJECT CALCULATIONS INTO RIGHT TABLE (M2)
     document.getElementById('m2_sales').innerText = Math.round(totalRevenue).toLocaleString('en-IN');
     
-    document.getElementById('m2_raw').innerText = Math.round(fuelCost).toLocaleString('en-IN');
+    document.getElementById('m2_raw').innerText = displayedFuelCost;
     document.getElementById('m2_wages').innerText = wages.toLocaleString('en-IN');
     document.getElementById('m2_drawings').innerText = sustenanceDrawings.toLocaleString('en-IN');
     
